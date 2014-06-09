@@ -1,0 +1,31 @@
+Important notes:
+1) CPP programs using Pqxx  must be compiled with -lpq -lpqxx params
+2) POSTGRESQL creates index names logs_pkey on the table "logs" which can also be used to delete this constraint.
+To install postgresql:
+sudo apt-get install postgresql
+sudo -u postgres psql postgres
+sudo -u postgres createdb mydb
+3) Using libcurl, to make an http request  - sudo apt-get install libcurl4-openssl-dev
+4) Libcurl is in C. TO install C++ wrapper: 
+------------------------
+wget http://curlpp.googlecode.com/files/curlpp-0.7.3.tar.gz 
+tar zxf curlpp-0.7.3.tar.gz
+cd curlpp-0.7.3
+./configure
+make
+sudo make install
+------------------------
+5) Might need for libcurlpp:
+------------------------
+Problem
+I was able to compile and link a program using curlpp, but I get this error:
+error while loading shared libraries: libcurlpp.so.0: cannot open shared object file: No such file or directory
+Solution
+This will may only work in Ubuntu:
+    sudo bash -c "echo /usr/local/lib/ > /etc/ld.so.conf.d/local.conf"
+    sudo /sbin/ldconfig
+------------------------
+6) Also need liboost for REST. To install liboost
+sudo apt-get install libboost-system
+sudo apt-get install libboost-system-dev 
+
