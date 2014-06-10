@@ -3,7 +3,7 @@
 #include<fstream>
 #include<vector>
 #include<sstream>
-#include "sha256.h"
+#include "../../lib/sha.h"
 
 class entry{
 	std::string id,mac;
@@ -54,13 +54,13 @@ public:
 		return data.at(index);
 	}
 };
-std::string generatehash(std::string mac){
+/*std::string generatehash(std::string mac){
 	std::string output1,salt="digivjay";
 	for(int i=0; i< 1000; i++){
-		output1 = sha256(output1 + mac + salt);
+		output1 = sha(output1 + mac + salt);
 	}
 	return output1;
-}
+}*/
 bool push(entry ent,std::string sha){
 	pqxx::connection conn("dbname=mydb user=postgres password=admin hostaddr=127.0.0.1 port=5432");
 	if(conn.is_open()){
