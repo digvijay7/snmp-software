@@ -92,7 +92,7 @@ static int url_handler (void *cls,
     // Add token checking function here
   }
   else{
-    return send_bad_response(connection,"Error - No token supplied");
+    //return send_bad_response(connection,"Error - No token supplied");
   }
     type = typexml;
 
