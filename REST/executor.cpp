@@ -13,6 +13,7 @@
 
 #include "executor.hpp"
 #include "strutil.hpp"
+#include <sha.h>
 
 using namespace ourapi;
 
@@ -63,7 +64,7 @@ bool Executor::ap_connections(const vector<string>&args, outputType type, string
 
 bool Executor::uid(const vector<string>&args, outputType type, string & response){
 	std::stringstream ss;
-	ss << "SELECT uid from uid where mac='"<< args.at(0)<<"';";
+	ss << "SELECT uid from uid where hash=decode('"<< generatehash(args.at(0))<<"','hex');";
 	return Executor::generic_query(args,type,response,ss.str(),1);
 }
 
