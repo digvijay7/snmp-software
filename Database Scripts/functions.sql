@@ -92,7 +92,7 @@ id2 integer;
 begin
 select get_uid(tdevice) into id1;
 select get_uid(tclient) into id2;
-insert into logs(device,client,ts,label,type)
+insert into logs(device_id,client_id,ts,label,type)
 values (id1,id2,tts,tlabel,ttype);
 return 1;
 end
