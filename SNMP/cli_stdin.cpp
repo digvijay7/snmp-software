@@ -138,18 +138,18 @@ int information(int trap, std::string info){
 }
 
 info parse(std::vector<std::string> * log, bool getseperator,std::ofstream & out){
-	std::string buffer;
+	std::string buffer,first="";
 	info inf;
   int i,trap,seen;
 	try{
     while(1){
-      if(getseperator)
+      if(getseperator){
         std::getline(std::cin,buffer);
-      std::istringstream iss(buffer);
-  		std::string first;
-  		iss>>first;
+        std::istringstream iss(buffer);
+        iss>>first;
+      }
   		int i=0,trap=0,seen=0;
-  		if(first.compare("--------------")==0){
+  		if(getseperator == false or first.compare("--------------")==0){
   		  i=0;trap=0;seen=0;
     		for(;i<3;i++){getline(std::cin,buffer);}
     			//(*log).push_back(buffer); // DATE TIME
@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 //		std::ifstream in ("/home/digvijay/temp.txt",std::ifstream::in);
 //		std::ifstream in ("/media/digvijay/44E6C1E0E6C1D27A/snmptraps.log",std::ifstream::in);
 //		std::fstream file("/home/digvijay/Desktop/count.txt");
-    bool setseperator=false;
+    bool setseperator=true;
 		while(1)
 		{
 	//      boost::array<char, 256> buf;
