@@ -6,7 +6,7 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-// Compile with : g++ cli.cpp -static -lboost_system -lboost_thread -lpthread -o cli_stdin.o
+// Compile with : g++ cli_stdin.cpp -static -lboost_system -lboost_thread -lpthread -o cli_stdin.o
 
 
 #include <iostream>
@@ -17,8 +17,12 @@
 #include <sstream>
 #include <vector>
 #include <ctime>
+#include <csignal>
 
 using boost::asio::ip::tcp;
+
+static bool shouldNotExit = true;
+
 
 class info{
 	std::string client,device,label,date;
@@ -199,16 +203,21 @@ info parse(std::vector<std::string> * log, bool getseperator,std::ofstream & out
  	return inf;
 }
 
+void handle_term(int sig_no){
+  shouldNotExit = false;
+}
+
 int main(int argc, char* argv[])
 {
 	//For Logging
 	// --
 	if (argc != 3)
-    {
-		std::cerr << "Usage: client <host> <port>" << std::endl;
-		return 1;
-    }
-	std::stringstream tss;
+  {
+    std::cerr << "Usage: client <host> <port>" << std::endl;
+    return 1;
+  }
+  signal(SIGTERM,handle_term);
+  std::stringstream tss;
 	tss << "/home/iiitd/cli_stdin" <<argv[2]<<".log";
 	std::cout<<"Trying to open \""<<tss.str()<<"\" log file"<<std::endl;
 	std::ofstream out (tss.str().c_str(),std::ofstream::out);
@@ -236,7 +245,7 @@ int main(int argc, char* argv[])
 //		std::ifstream in ("/media/digvijay/44E6C1E0E6C1D27A/snmptraps.log",std::ifstream::in);
 //		std::fstream file("/home/digvijay/Desktop/count.txt");
     bool setseperator=true;
-		while(1)
+		while(shouldNotExit)
 		{
 	//      boost::array<char, 256> buf;
 			boost::system::error_code error;
