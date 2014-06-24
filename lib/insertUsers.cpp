@@ -20,9 +20,9 @@ int main(int argc, char* argv[])
          return 1;
       }
       string user,pass;
-	cout<<"Enter username"<<endl;
+	cout<<"Enter username :"<<endl;
 	cin>>user;
-	cout<<"Enter password"<<endl;
+	cout<<"Enter password :"<<endl;
 	cin>>pass;
 	string hashedpass = generatehash(pass);
 	work w(C);

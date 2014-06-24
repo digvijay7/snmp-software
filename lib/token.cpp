@@ -41,7 +41,7 @@ std::string generatetoken(std::string inpUsername,std::string inpPassword){
       		}
 		work W1(C);
 		std::stringstream ss;
-		ss << "SELECT username,password from users where username ='"<<inpUsername<<"';";
+		ss << "SELECT username, encode(password,'escape') from users where username ='"<<inpUsername<<"';";
 		result R(  W1.exec(ss.str())  );
 		W1.commit();
 	
@@ -103,7 +103,7 @@ std::string generatetoken(std::string inpUsername,std::string inpPassword){
 
 				work W4(C);
 				std::stringstream ss;
-				ss << "INSERT INTO tokenTable (username,token,expiration) VALUES ('" << inpUsername << "','" << token << "','" <<expiration_time << "');";
+				ss << "INSERT INTO tokenTable (username, token, expiration) VALUES ('" << inpUsername << "','" << token << "','" <<expiration_time << "');";
 				W4.exec(ss.str());
 				W4.commit();
 			}//if stat for alreadyExistsFlag ends
@@ -116,4 +116,3 @@ std::string generatetoken(std::string inpUsername,std::string inpPassword){
    	}
 
 }
-

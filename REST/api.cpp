@@ -27,7 +27,6 @@ bool api::authenticateAPI( const map<string, string>& argvals, string& response)
   if(it !=argvals.end()){
   	if( !tokenchecking(it->second) ){
 		response="Invalid token";
-		std::cout<<"Jere"<<std::endl;
 		return false;
 	}
 	else{
@@ -50,12 +49,12 @@ bool api::authenticateAPI( const map<string, string>& argvals, string& response)
 		}
 	}
         else{
-		response="Inavlid API Call1";
+		response="Inavlid API Call";
 		return false;
 	}
   }
   else{
-	response="Invalid API Call2";
+	response="Invalid API Call";
 	return false;
   }
 

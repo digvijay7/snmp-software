@@ -19,7 +19,7 @@ using std::string;
  
 static int shouldNotExit = 1;
 
-int send_bad_response( struct MHD_Connection *connection, std::string &content)
+static int send_bad_response( struct MHD_Connection *connection, std::string content)
 {
   std::stringstream ss;
   ss << "<html><head><title>Error</title></head><body>" << content <<"</body></html>";
@@ -77,34 +77,29 @@ static int url_handler (void *cls,
     ourapi::api callapi;
     string respdata, respdata_auth;
 
-
     // Support only GET for demonstration
   if (0 != strcmp (method, "GET"))
     return MHD_NO; 
 
 
- /* if (&aptr != *ptr) {
+  if (&aptr != *ptr) {
     *ptr = &aptr;
     return MHD_YES;
-  }*/
+  }
 
   
 
     type = typexml;
    if (MHD_get_connection_values (connection, MHD_GET_ARGUMENT_KIND, get_url_args, &url_args) < 0) {
-    return send_bad_response(connection,*(new string("Error - bad url")));
+    return send_bad_response(connection, "Error - bad url");
   }
-	
-std::cout<<url<<std::endl;
 
   if(callapi.authenticateAPI(url_args, respdata_auth) == false){
-	std::cout<<respdata_auth<<"<<<<<"<<std::endl;
       return send_bad_response(connection, respdata_auth);
   }
-	
-  
+
     if(callapi.executeAPI(url, url_args, respdata) == false){
-       return send_bad_response(connection, *(new string("Error - bad API call")));
+       return send_bad_response(connection, "Error - bad API call");
     }
   
     *ptr = 0;                  /* reset when done */
