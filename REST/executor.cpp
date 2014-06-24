@@ -61,12 +61,89 @@ bool Executor::ap_connections(const vector<string>&args, outputType type, string
 	ss << " left join uid as t1 on t1.uid = t2.device_id; ";
 	return Executor::generic_query(args,type,response,ss.str(),2);
 }
-
-bool Executor::uid(const vector<string>&args, outputType type, string & response){
+/*
+******************************
+Getting UID from MAC functions
+******************************
+*/
+bool Executor::uid(const args_container &args, outputType type, string & response){
 	std::stringstream ss;
-	ss << "SELECT uid from uid where hash=decode('"<< generatehash(args.at(0))<<"','hex');";
-	return Executor::generic_query(args,type,response,ss.str(),1);
+	ss << "SELECT uid from uid where hash=decode('"<< generatehash(args.mac)<<"','hex');";
+  std::cout<<args.mac<<" "<<ss.str()<<std::endl;
+	return Executor::generic_query(response,ss.str(),VALID_API_MAC);
 }
+
+bool write_uid(pqxx::result & res,string & response){
+  ptree root_t;
+  root_t.put("uid",res[0][0]);
+  std::ostringstream oss;
+  write_json(oss,root_t);
+  response = oss.str();
+  return true;
+}
+/*
+*******************************
+Getting last N entries function
+*******************************
+*/
+bool last(const args_container &args, outputType type, string & response,const string & url){
+  bool res = false
+  return res;
+}
+
+/*
+************************************************
+Getting entries between two dates+times function
+************************************************
+*/
+bool std(const args_container &args, outputType type, string & response,const string & url){
+  bool res = false
+  return res;
+}
+
+/*
+*****************************
+Function to execute SQL query
+*****************************
+*/
+bool Executor::generic_query(string & response, const string query,unsigned int type){
+  try{
+    pqxx::connection conn("dbname=mydb user=postgres password=admin hostaddr=127.0.0.1 port=5432");
+    if(!conn.is_open()){
+      return false;
+    }
+    pqxx::work w(conn);
+    pqxx::result res = w.exec(query);
+    w.commit();
+    if(type == VALID_API_MAC){
+      return write_uid(res,response);
+    }
+    /*ptree root_t;
+    ptree children;
+    root_t.put("size",res.size());
+    for(unsigned int rownum = 0 ;rownum < res.size(); rownum++){
+      ptree child;
+      child.put("device_id",res[rownum][0]);
+      child.put("client_id",res[rownum][1]);
+      child.put("ts",res[rownum][2]);
+      child.put("label",res[rownum][3]);
+      child.put("type",res[rownum][4]);
+      children.push_back(make_pair("",child);
+    }
+    root_t.add_child("log entries",children);
+    std::stringstream ss;
+    write_json(oss,root_t);
+    response = ss.str();
+    return true;*/
+  }
+  catch(const std::exception & e){
+    std::cerr<<e.what()<<std::endl;
+    return false;
+  }
+  response = "API not ready yet"; // Remove before issuing a pull request
+  return true;
+}
+
 
 bool Executor::generic_query(const vector<string>&args, outputType type, string & response,string query,int t){
 	try{    

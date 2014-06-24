@@ -1,7 +1,6 @@
 #include <string.h>
 #include <boost/foreach.hpp>
 #include "api.hpp"
-#include "strutil.hpp"
 #include <iostream>
 
 using namespace ourapi;
@@ -21,34 +20,34 @@ unsigned int fill_args(const map<string,string> & args, struct args_container & 
     }
     else if(it->first == "from"){
       result |= AFROM;
-      param.from = it->second;
+      params.from = it->second;
     }
     else if(it->first == "to"){
       result |= ATO;
-      param.to = it->second;
+      params.to = it->second;
     }
     else if(it->first == "format"){
       result |= AFORMAT;
-      param.format = it->second;
+      params.format = it->second;
     }
     else if(it->first == "last"){
       result |= ALAST;
-      param.last = it->second;
+      params.last = it->second;
     }
     else if(it->first == "mac"){
       result |= AMAC;
-      param.last = it->second;
+      params.mac = it->second;
     }
     it++;
   }
-  param.type = result;
+  params.type = result;
   return result;
 }
 
 bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response){
   // Ignore all the args except the "fields" param 
   Executor::outputType type = Executor::TYPE_JSON;
-  api_container params;
+  args_container params;
   
   // **Later check for duplicate url_arguments**
 
@@ -67,7 +66,7 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
 
   // erase_whitespace()
   params.erase_whitespace();
-
+/*
 	isPara.push_back(uid);
 	isPara.push_back(fd);
 	isPara.push_back(td);
@@ -76,7 +75,7 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
 	isPara.push_back(tt);
 	isPara.push_back(mac);
 	isPara.push_back(last);
-
+*/
   //create function to validate data later
 
   /*if ( !_validate(&vdata)) {
@@ -84,15 +83,15 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
         return false;
     }*/
 
-    it1 = argvals.find("type");
+    /*it1 = argvals.find("type");
     if (it1 != argvals.end()){
         const string outputtype = it1->second;
         if (strcasecmp(outputtype.c_str(), "xml") == 0 ) {
             type = Executor::TYPE_XML;
         }
     }
-
-    return _executeAPI(url, args, type, response,isPara);
+*/
+    return _executeAPI(url, params, type, response);
 }
 
 int queryType(vector<bool> para){
@@ -116,6 +115,18 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
         Executor::outputType type, string& response)
 {
     bool ret = false;
+    if(argvals.type == VALID_API_MAC){
+      ret = _executor.uid(argvals,type,response);
+    }
+    else if(argvals.type == VALID_API_LAST){
+      ret = _executor.last(argvals,type,response,url); // 'url' checks for '/client' or '/device'
+    }
+    else if(argvals.type == VALID_API_STD){
+      ret = _executor.std(argvals,type,response,url); // 'std' is used to refer to the standrd from date to to date api
+    }
+
+
+    /*
 	if(isPara.at(6)==true)
 		ret = _executor.uid(argvals, type, response);
 	else if( url == "/connections"){
@@ -147,7 +158,7 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
 			case 3: ret = _executor.client_last(argvals, type, response);break;
 		}
 
-/*
+
 		if(isPara.at(0)==true && isPara.at(1)==false && isPara.at(2)==false )
 		        ret = _executor.client(argvals, type, response);
 		else if(isPara.at(0)==true && isPara.at(1)==true && isPara.at(2)==false )
@@ -156,8 +167,8 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
 			ret = _executor.client_to(argvals, type, response);
 		else if(isPara.at(0)==true && isPara.at(1)==true && isPara.at(2)==true )
 			ret = _executor.client_from_to(argvals, type, response);
-*/
-	}
+
+	}*/
     return ret;
 }
 
