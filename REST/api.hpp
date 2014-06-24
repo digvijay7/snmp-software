@@ -19,8 +19,8 @@ class api
 {
 public:
     api();
-    bool executeAPI(const string& url, const map<string, string>& argval, 
-            string& response);
+    bool executeAPI(const string& url, const map<string, string>& argval, string& response);
+    bool authenticateAPI(const map<string, string>& argvals, string& response);
 private:
     Executor _executor;
     bool _validate(const void*  data);
