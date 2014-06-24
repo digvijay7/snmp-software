@@ -3,101 +3,70 @@
 #include "api.hpp"
 #include "strutil.hpp"
 #include <iostream>
-//"Test"
-using namespace ourapi;
 
-struct validate_data
-{
-    string api;
-    set <string>* params; 
-};
+using namespace ourapi;
 
 api::api()
 {
     set<string> params;
 }
 
-bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response)
-{
-    // Ignore all the args except the "fields" param 
-    validate_data vdata ;
-    vdata.api = url;
-    Executor::outputType type = Executor::TYPE_JSON;
-    set<string> uniqueparams;
-	vector<bool> isPara;
-	vector<std::string> args;
-	bool mac=false,uid=false,fd=false,td=false,ft=false,tt=false,od=false,last=false; //f_=from _d=date _t=time t_=to od = on date
-    map<string,string>::const_iterator it1 = argvals.find("uid");
-	map<string,string>::const_iterator it2 = argvals.find("fd");
-	map<string,string>::const_iterator it3 = argvals.find("td");
-	map<string,string>::const_iterator it4 = argvals.find("od");
-	map<string,string>::const_iterator it5 = argvals.find("ft");
-	map<string,string>::const_iterator it6 = argvals.find("tt");
-	map<string,string>::const_iterator it7 = argvals.find("mac");
-	map<string,string>::const_iterator it8 = argvals.find("last");
+unsigned int fill_args(const map<string,string> & args, struct args_container & params){
+  map<string,string>::const_iterator it = args.begin();
+  unsigned int result=0;
+  while(it!=args.end()){
+    if(it->first == "uid"){
+      result |= AUID;
+      params.uid = it->second;
+    }
+    else if(it->first == "from"){
+      result |= AFROM;
+      param.from = it->second;
+    }
+    else if(it->first == "to"){
+      result |= ATO;
+      param.to = it->second;
+    }
+    else if(it->first == "format"){
+      result |= AFORMAT;
+      param.format = it->second;
+    }
+    else if(it->first == "last"){
+      result |= ALAST;
+      param.last = it->second;
+    }
+    else if(it->first == "mac"){
+      result |= AMAC;
+      param.last = it->second;
+    }
+    it++;
+  }
+  param.type = result;
+  return result;
+}
+
+bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response){
+  // Ignore all the args except the "fields" param 
+  Executor::outputType type = Executor::TYPE_JSON;
+  api_container params;
+  
+  // **Later check for duplicate url_arguments**
+
     /*if (it1 != argvals.end()) {
         string prms = it1->second;
         StrUtil::eraseWhiteSpace(prms);
         StrUtil::splitString(prms, ",", params);   
     }*/
-	// Unique params will come handy when, in future we allow for multiple MACs to be sent at once.
-	string prms;	
-	if(it1!=argvals.end()){
-	prms = it1->second;
-	StrUtil::eraseWhiteSpace(prms);
-	uniqueparams.insert(prms);
-	args.push_back(prms);
-	uid=true;
-	}
-	if(it2!=argvals.end()){
-	prms = it2->second;
-	StrUtil::eraseWhiteSpace(prms);
-	uniqueparams.insert(prms);
-	args.push_back(prms);
-	fd=true;
-	}
-	if(it3!=argvals.end()){
-	prms = it3->second;
-	StrUtil::eraseWhiteSpace(prms);
-	uniqueparams.insert(prms);
-	args.push_back(prms);
-	td=true;
-	}
-	if(it4!=argvals.end()){
-	prms = it4->second;
-	StrUtil::eraseWhiteSpace(prms);
-	uniqueparams.insert(prms);
-	args.push_back(prms);
-	od=true;
-	}
-	if(it5!=argvals.end()){
-	prms = it5->second;
-	StrUtil::eraseWhiteSpace(prms);
-	uniqueparams.insert(prms);
-	args.push_back(prms);
-	ft=true;
-	}
-	if(it6!=argvals.end()){
-	prms = it6->second;
-	StrUtil::eraseWhiteSpace(prms);
-	uniqueparams.insert(prms);
-	args.push_back(prms);
-	tt=true;
-	}
-	if(it7!=argvals.end()){
-	prms = it7->second;
-	StrUtil::eraseWhiteSpace(prms);
-	uniqueparams.insert(prms);
-	args.push_back(prms);
-	mac=true;
-	}
-	if(it8!=argvals.end()){
-	prms = it8->second;
-	StrUtil::eraseWhiteSpace(prms);
-	uniqueparams.insert(prms);
-	args.push_back(prms);
-	last=true;
-	}
+	//Old comment -  Unique params will come handy when, in future we allow for multiple MACs to be sent at once.
+	string prms;
+  unsigned int api_type = fill_args(argvals,params);
+  if(api_type!= VALID_API_STD and api_type != VALID_API_LAST and api_type != VALID_API_MAC){
+    response = "Invalid API call";
+    return false;
+  }
+
+  // erase_whitespace()
+  params.erase_whitespace();
 
 	isPara.push_back(uid);
 	isPara.push_back(fd);
@@ -107,8 +76,10 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
 	isPara.push_back(tt);
 	isPara.push_back(mac);
 	isPara.push_back(last);
-	vdata.params = &uniqueparams;
-/*    if ( !_validate(&vdata)) {
+
+  //create function to validate data later
+
+  /*if ( !_validate(&vdata)) {
         _getInvalidResponse(response);
         return false;
     }*/
@@ -141,8 +112,8 @@ int queryType(vector<bool> para){
 		return 0;
 }
 
-bool api::_executeAPI(const string& url, const vector<string>& argvals, 
-        Executor::outputType type, string& response,vector<bool> isPara)
+bool api::_executeAPI(const string& url, const struct args_container & argvals, 
+        Executor::outputType type, string& response)
 {
     bool ret = false;
 	if(isPara.at(6)==true)
