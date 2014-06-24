@@ -112,14 +112,27 @@ SET default_with_oids = false;
 
 CREATE TABLE logs (
     device integer NOT NULL,
-    client integer NOT NULL,
     ts timestamp without time zone NOT NULL,
     label character varying(30),
-    type integer
+    type integer,
+    client_id integer DEFAULT 2
 );
 
 
 ALTER TABLE public.logs OWNER TO postgres;
+
+--
+-- Name: tokentable; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tokentable (
+    username text NOT NULL,
+    token bytea NOT NULL,
+    expiration bigint NOT NULL
+);
+
+
+ALTER TABLE public.tokentable OWNER TO postgres;
 
 --
 -- Name: uid; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -158,6 +171,18 @@ ALTER SEQUENCE uid_uid_seq OWNED BY uid.uid;
 
 
 --
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE users (
+    username text NOT NULL,
+    password bytea NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
 -- Name: uid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -168,7 +193,18 @@ ALTER TABLE ONLY uid ALTER COLUMN uid SET DEFAULT nextval('uid_uid_seq'::regclas
 -- Data for Name: logs; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY logs (device, client, ts, label, type) FROM stdin;
+COPY logs (device, ts, label, type, client_id) FROM stdin;
+1	2012-12-23 01:01:01	abc	1	2
+\.
+
+
+--
+-- Data for Name: tokentable; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tokentable (username, token, expiration) FROM stdin;
+harkirat	\\x39653837313332656166343364616436303435643666663063616631356630306466626263316135633761303734646236356166623137313264386137613830	1403636932
+garvita	\\x33383031363639646266363438326263396636386432633766626137386464616337346332613330623061623134393764656462356230633936633833383332	1403638401
 \.
 
 
@@ -188,11 +224,22 @@ SELECT pg_catalog.setval('uid_uid_seq', 4125, true);
 
 
 --
--- Name: logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY logs
-    ADD CONSTRAINT logs_pkey PRIMARY KEY (device, client, ts);
+COPY users (username, password) FROM stdin;
+harkirat	\\x63363266323134336530613632336630323837633239343565663236643963613131393630376265353438393938643233323065303038393232346333646230
+garvita	\\x63363266323134336530613632336630323837633239343565663236643963613131393630376265353438393938643233323065303038393232346333646230
+digvijay	\\x63363266323134336530613632336630323837633239343565663236643963613131393630376265353438393938643233323065303038393232346333646230
+\.
+
+
+--
+-- Name: tokentable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY tokentable
+    ADD CONSTRAINT tokentable_pkey PRIMARY KEY (username);
 
 
 --
@@ -201,6 +248,14 @@ ALTER TABLE ONLY logs
 
 ALTER TABLE ONLY uid
     ADD CONSTRAINT uid_pkey PRIMARY KEY (hash);
+
+
+--
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (username);
 
 
 --
@@ -223,4 +278,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
+
 
