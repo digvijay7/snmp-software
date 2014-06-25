@@ -47,7 +47,7 @@ bool api::authenticateAPI( const map<string, string>& argvals, string& response)
 	}
   }
   else{
-	response="Inavlid API Call";
+	response="Invalid API Call";
 	return false;
   }
 }
