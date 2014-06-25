@@ -34,31 +34,22 @@ bool api::authenticateAPI( const map<string, string>& argvals, string& response)
 	}
   }
   it = argvals.find("username");
-  if(it !=argvals.end()){
-	it2 = argvals.find("password");
-	if (it2 != argvals.end()){
-		recieved_token = generatetoken(it->second,it2->second);
-		if(recieved_token=="")
-		{
-			response="Invalid Username/Password";
-			return false;
-		}
-		else{
-			response=recieved_token;
-			return false;
-		}
+  it2 = argvals.find("password");
+  if( it !=argvals.end() && it2 != argvals.end() ){
+	recieved_token = generatetoken(it->second,it2->second);
+	if(recieved_token==""){
+		response="Invalid Username/Password";
+		return false;
 	}
-        else{
-		response="Inavlid API Call";
+	else{
+		response=recieved_token;
 		return false;
 	}
   }
   else{
-	response="Invalid API Call";
+	response="Inavlid API Call";
 	return false;
   }
-
-
 }
 
 bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response)

@@ -7,27 +7,6 @@
 
 using namespace pqxx;
 
-int strcmp_me(std::string str1, std::string str2)
-{
-	int i=0, diff =1;
-	while(1)
-	{
-		if(str1[i]!=str2[i])
-		{
-			diff = 1;
-			break;
-		}
-		if(str1[i] == '\0' && str2[i] == '\0')
-		{
-			diff=0;
-			break;
-		}
-		i++;
-	}
-	if(diff==0) return 0;
-	else return 1;
-}
-
 std::string generatetoken(std::string inpUsername,std::string inpPassword){
 	char *sql,*sql2;
 	std::string token;
@@ -56,7 +35,7 @@ std::string generatetoken(std::string inpUsername,std::string inpPassword){
 		{
 			std::string resultPass = v[1].as<std::string>();
 			std::string hashedPassword = generatehash(inpPassword);
-			if (strcmp_me(hashedPassword,resultPass)==0)
+			if(hashedPassword==resultPass)
 			{
 					credentialsMatchFlag=true;
 
