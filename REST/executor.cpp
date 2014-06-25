@@ -86,7 +86,7 @@ bool write_uid(pqxx::result & res,string & response){
 Getting last N entries function
 *******************************
 */
-bool last(const args_container &args, outputType type, string & response,const string & url){
+bool Executor::last(const args_container &args, outputType type, string & response,const string & url){
   bool res = false
   return res;
 }
@@ -96,9 +96,18 @@ bool last(const args_container &args, outputType type, string & response,const s
 Getting entries between two dates+times function
 ************************************************
 */
-bool std(const args_container &args, outputType type, string & response,const string & url){
+bool Executor::std(const args_container &args, outputType type, string & response,const string & url){
   bool res = false
   return res;
+}
+/*
+************************************************
+For Harkirat - duration function
+************************************************
+*/
+bool format_entries(pqxx::result & res, std::string & response){
+  bool ret=false;
+  return ret;
 }
 
 /*
