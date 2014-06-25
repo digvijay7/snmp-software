@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 	work w(C);
 
 	stringstream ss;
-	ss << "INSERT INTO users VALUES ('" << user << "','" << hashedpass <<"');";
+	ss << "INSERT INTO users VALUES ('" << user << "',decode('" << hashedpass <<"','hex'));";
 	w.exec(ss.str());
 	w.commit();
 
