@@ -1,6 +1,7 @@
 #include <string.h>
 #include <boost/foreach.hpp>
 #include "api.hpp"
+#include "sha.h"
 #include <iostream>
 
 using namespace ourapi;
@@ -8,6 +9,40 @@ using namespace ourapi;
 api::api()
 {
     set<string> params;
+}
+
+bool api::authenticateAPI( const map<string, string>& argvals, string& response)
+{
+  map<string, string>:: const_iterator it,it2;
+  std::string recieved_token;
+
+  it = argvals.find("token");
+  if(it !=argvals.end()){
+  	if( !tokenchecking(it->second) ){
+		response="Invalid token";
+		return false;
+	}
+	else{
+		return true;
+	}
+  }
+  it = argvals.find("username");
+  it2 = argvals.find("password");
+  if( it !=argvals.end() && it2 != argvals.end() ){
+	recieved_token = generatetoken(it->second,it2->second);
+	if(recieved_token==""){
+		response="Invalid Username/Password";
+		return false;
+	}
+	else{
+		response=recieved_token;
+		return false;
+	}
+  }
+  else{
+	response="Invalid API Call";
+	return false;
+  }
 }
 
 unsigned int fill_args(const map<string,string> & args, struct args_container & params){

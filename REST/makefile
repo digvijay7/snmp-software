@@ -1,9 +1,9 @@
 CC=g++
 CFLAGS=-c -Wall
-LDFLAGS=-lmicrohttpd -lpq -lpqxx
+LDFLAGS=-lmicrohttpd -lpqxx -lpq
 SOURCES=httphandler.cpp strutil.cpp api.cpp executor.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-DEPENDENCIES=../lib/sha.cpp
+DEPENDENCIES=../lib/sha.cpp ../lib/token.cpp ../lib/checktoken.cpp
 EXECUTABLE=rest-server
 INCLUDES=-I../lib/
 

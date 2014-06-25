@@ -87,7 +87,7 @@ Getting last N entries function
 *******************************
 */
 bool Executor::last(const args_container &args, outputType type, string & response,const string & url){
-  bool res = false
+  bool res = false;
   return res;
 }
 
@@ -97,7 +97,7 @@ Getting entries between two dates+times function
 ************************************************
 */
 bool Executor::std(const args_container &args, outputType type, string & response,const string & url){
-  bool res = false
+  bool res = false;
   return res;
 }
 /*

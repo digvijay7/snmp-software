@@ -35,8 +35,8 @@ public:
 	bool ap_connections(const vector<string>& args, outputType type,  string& response);
 	bool ap_near(const vector<string>& args, outputType type,  string& response);
 	bool uid(const args_container & args, outputType type,  string& response);
-  bool last(const args_container & args, outputType type,  string& response,string & url);
-  bool std(const args_container & args, outputType type,  string & response,string & url);
+  bool last(const args_container & args, outputType type,  string& response,const string & url);
+  bool std(const args_container & args, outputType type,  string & response,const string & url);
 private:
 	bool generic_query(const vector<string>& args, outputType type,  string& response,string query,int t);
   bool generic_query(string & response, string query,unsigned int type);

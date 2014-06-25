@@ -6,7 +6,7 @@
 #include <map>
 #include <string>
 #include <cstring>
-#include <sha.h>
+#include "sha.h"
 #include "api.hpp"
 #include <sstream>
 #include <cstdlib>
@@ -26,14 +26,15 @@ static int send_bad_response( struct MHD_Connection *connection, std::string con
   char * temp = (char *) std::malloc(ss.str().length()+1);
   std::strcpy(temp,ss.str().c_str());
 
-  static char * bad_response = temp;
+  static char * bad_response ;
+  bad_response = temp;
   int bad_response_len = strlen(bad_response);
   int ret;
   struct MHD_Response *response;
   response = MHD_create_response_from_buffer ( bad_response_len,
-                bad_response,MHD_RESPMEM_PERSISTENT);
+	        bad_response,MHD_RESPMEM_PERSISTENT);
     if (response == 0){
-        return MHD_NO;
+	return MHD_NO;
     }
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
@@ -42,20 +43,20 @@ static int send_bad_response( struct MHD_Connection *connection, std::string con
 
 
 static int get_url_args(void *cls, MHD_ValueKind kind,
-                    const char *key , const char* value)
+	            const char *key , const char* value)
 {
     map<string, string> * url_args = static_cast<map<string, string> *>(cls);
 
     if (url_args->find(key) == url_args->end()) {
-         if (!value)
-             (*url_args)[key] = "";
-         else 
-            (*url_args)[key] = value;
+	 if (!value)
+	     (*url_args)[key] = "";
+	 else 
+	    (*url_args)[key] = value;
     }
     return MHD_YES;
 
 }
-                
+	        
 static int url_handler (void *cls,
     struct MHD_Connection *connection,
     const char *url,
@@ -75,7 +76,7 @@ static int url_handler (void *cls,
     map<string, string> url_args;
     map<string, string>:: iterator  it;
     ourapi::api callapi;
-    string respdata;
+    string respdata, respdata_auth;
 
     // Support only GET for demonstration
   if (0 != strcmp (method, "GET"))
@@ -87,36 +88,33 @@ static int url_handler (void *cls,
     return MHD_YES;
   }
 
-  it = url_args.find("token");
-  if (it != url_args.end()){
-    // Add token checking function here
-  }
-  else{
-    //return send_bad_response(connection,"Error - No token supplied");
-  }
+  
+
     type = typexml;
-
-  if (MHD_get_connection_values (connection, MHD_GET_ARGUMENT_KIND, get_url_args, &url_args) < 0) {
-    return send_bad_response(connection,"Error - bad url");
+   if (MHD_get_connection_values (connection, MHD_GET_ARGUMENT_KIND, get_url_args, &url_args) < 0) {
+    return send_bad_response(connection, "Error - bad url");
   }
 
-  if(callapi.executeAPI(url, url_args, respdata) == false){
-    return send_bad_response(connection, "Error - bad API call");
+  if(callapi.authenticateAPI(url_args, respdata_auth) == false){
+      return send_bad_response(connection, respdata_auth);
   }
 
+    if(callapi.executeAPI(url, url_args, respdata) == false){
+       return send_bad_response(connection, "Error - bad API call");
+    }
+  
     *ptr = 0;                  /* reset when done */
     val = MHD_lookup_connection_value (connection, MHD_GET_ARGUMENT_KIND, "q");
     me = (char *)malloc (respdata.size() + 1);
     if (me == 0)
-        return MHD_NO;
+	return MHD_NO;
     strncpy(me, respdata.c_str(), respdata.size() + 1);
-    response = MHD_create_response_from_buffer (strlen (me), me,
-					      MHD_RESPMEM_MUST_FREE);
-    if (response == 0){
-        free (me);
-        return MHD_NO;
-    }
+    response = MHD_create_response_from_buffer (strlen (me), me, MHD_RESPMEM_MUST_FREE);
 
+    if (response == 0){
+	free (me);
+	return MHD_NO;
+    }
    
     MHD_add_response_header(response, "Content-Type", "text");
     MHD_add_response_header(response, "OurHeader", type);
@@ -137,13 +135,13 @@ void* http(void *arg)
     struct MHD_Daemon *d;
 
     d = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG | MHD_USE_POLL,
-                        *port,
-                        0, 0, &url_handler, (void *)PAGE, MHD_OPTION_END);
+	                *port,
+	                0, 0, &url_handler, (void *)PAGE, MHD_OPTION_END);
     if (d == 0){
-        return 0;
+	return 0;
     }
     while(shouldNotExit) {
-        sleep(1);
+	sleep(1);
     }
     MHD_stop_daemon (d);
     return 0;
@@ -153,15 +151,15 @@ int main (int argc, char *const *argv)
 {
 
     if (argc != 2){
-        std::printf ("%s PORT\n", argv[0]);
-        exit(1);
+	std::printf ("%s PORT\n", argv[0]);
+	exit(1);
     }
  //   daemon(0,0);
     signal(SIGTERM, handle_term);
     int port = atoi(argv[1]);
     pthread_t  thread;
     if ( 0 != pthread_create(&thread, 0 , http, &port)){
-        exit(1);
+	exit(1);
     }
     pthread_join(thread, 0);
     
