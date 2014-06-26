@@ -26,7 +26,8 @@ static int send_bad_response( struct MHD_Connection *connection, std::string con
   char * temp = (char *) std::malloc(ss.str().length()+1);
   std::strcpy(temp,ss.str().c_str());
 
-  static char * bad_response = temp;
+  static char * bad_response;
+  bad_response= temp;
   int bad_response_len = strlen(bad_response);
   int ret;
   struct MHD_Response *response;
