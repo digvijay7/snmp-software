@@ -89,17 +89,18 @@ Getting last N entries function
 bool Executor::last(const args_container &args, outputType type, string & response,const string & url){
   std::stringstream ss;
   ss << " select device_id,client_id,ts,label,type from logs where ";
-  if( url == "client/"){
+  if( url == "/client"){
     ss << " client_id = " << args.uid;
   }
-  else if( url == "ap/"){
+  else if( url == "/ap"){
     ss << " device_id = " << args.uid;
   }
   else { // Not yet implemented API or invalid API
     return false;
   }
-  ss << " and ts >= to_timestamp('" << args.from <<"','"<<args.format<<"') ";
-  ss << " and ts <= to_timestamp('" << args.to << "','" << args.format << "');";
+  //ss << " and ts >= to_timestamp('" << args.from <<"','"<<args.format<<"') ";
+  //ss << " and ts <= to_timestamp('" << args.to << "','" << args.format << "')";
+  ss << " order by ts desc limit " << args.last <<" ;";
   return Executor::generic_query(response,ss.str(),VALID_API_LAST);
 }
 

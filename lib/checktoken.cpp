@@ -16,7 +16,7 @@ bool tokenchecking(std::string token)
 		
 		work w(C);
 		std::stringstream ss;
-		ss<<"SELECT count(*) from tokentable where token = '" <<token<< "';";				
+		ss<<"SELECT count(*) from tokentable where token = decode('" <<token<< "','hex');";				
 		result R(w.exec(ss.str()));
 		w.commit();
 
@@ -37,4 +37,3 @@ bool tokenchecking(std::string token)
       		std::cerr << e.what() << std::endl;
    	}
 }
-
