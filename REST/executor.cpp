@@ -84,13 +84,44 @@ bool write_uid(pqxx::result & res,string & response){
 /*
 *******************************
 Getting last N entries function
-*******************************
+89-*******************************
 */
 bool Executor::last(const args_container &args, outputType type, string & response,const string & url){
-  bool res = false;
-  return res;
+  std::stringstream ss;
+  ss << " select device_id,client_id,ts,label,type from logs where ";
+  if( url == "client/"){
+    ss << " client_id = " << args.uid;
+  }
+  else if( url == "ap/"){
+    ss << " device_id = " << args.uid;
+  }
+  else { // Not yet implemented API or invalid API
+    return false;
+  }
+  ss << " and ts >= to_timestamp('" << args.from <<"','"<<args.format<<"') ";
+  ss << " and ts <= to_timestamp('" << args.to << "','" << args.format << "');";
+  return Executor::generic_query(response,ss.str(),VALID_API_LAST);
 }
 
+bool write_last(pqxx::result & res, string & response){
+	ptree root_t;
+  ptree children;
+  root_t.put("size",res.size());
+  for(unsigned int rownum = 0 ;rownum < res.size(); rownum++){
+    ptree child;
+    child.put("device_id",res[rownum][0]);
+    child.put("client_id",res[rownum][1]);
+    child.put("ts",res[rownum][2]);
+    child.put("label",res[rownum][3]);
+    child.put("type",res[rownum][4]);
+    children.push_back(make_pair("",child));
+  }
+  root_t.add_child("log entries",children);
+  std::stringstream ss;
+  write_json(ss,root_t);
+  response = ss.str();
+  return true;
+}
 /*
 ************************************************
 Getting entries between two dates+times function
@@ -126,6 +157,9 @@ bool Executor::generic_query(string & response, const string query,unsigned int 
     w.commit();
     if(type == VALID_API_MAC){
       return write_uid(res,response);
+    }
+    else if(type == VALID_API_LAST){
+      return write_last(res,response);
     }
     /*ptree root_t;
     ptree children;
