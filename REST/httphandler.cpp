@@ -16,8 +16,60 @@ using std::map;
 using std::string;
 
 #define PAGE "<html><head><title>Error</title></head><body>Bad data</body></html>"
- 
+//Move to file not shored on github (along with the database credentials)
+//Start
+#define SERVERKEYFILE "server.key" 
+#define SERVERCERTFILE "server.pem"
+//End
+
 static int shouldNotExit = 1;
+
+static long
+get_file_size (const char *filename)
+{
+  FILE *fp;
+
+  fp = fopen (filename, "rb");
+  if (fp)
+  {
+    long size;
+
+    if ((0 != fseek (fp, 0, SEEK_END)) || (-1 == (size = ftell (fp))))
+      size = 0;
+
+      fclose (fp);
+
+      return size;
+  }
+  else
+    return 0;
+}
+static char * load_file (const char *filename)
+{
+  FILE *fp;
+  char *buffer;
+  unsigned long size;
+  size = get_file_size (filename);
+
+  if (size == 0)
+    return NULL;
+  fp = fopen (filename, "rb");
+  if (!fp){
+    return NULL;
+  }
+  buffer = (char *) malloc (size);
+  if (!buffer){
+    fclose (fp);
+    return NULL;
+  }
+  if (size != fread (buffer, 1, size, fp)){
+    free (buffer);
+    buffer = NULL;
+  }
+  fclose (fp);
+  return buffer;
+}
+
 
 static int send_bad_response( struct MHD_Connection *connection, std::string content)
 {
@@ -123,20 +175,33 @@ void handle_term(int signo)
 
 void* http(void *arg)
 {
-    int *port = (int *)arg;
-    struct MHD_Daemon *d;
-
-    d = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG | MHD_USE_POLL,
-	                *port,
-	                0, 0, &url_handler, (void *)PAGE, MHD_OPTION_END);
-    if (d == 0){
-	return 0;
-    }
-    while(shouldNotExit) {
-	sleep(1);
-    }
-    MHD_stop_daemon (d);
+  int *port = (int *)arg;
+  struct MHD_Daemon *d;
+  char *key_pem;
+  char *cert_pem;
+  key_pem = load_file(SERVERKEYFILE);
+  cert_pem = load_file(SERVERCERTFILE);
+  if((key_pem == NULL) || (cert_pem == NULL)){
+    std::cout<<"The key/certificate files could not be read\n";
     return 0;
+  }
+  d = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG | MHD_USE_POLL | MHD_USE_SSL,
+  *port,0, 0, &url_handler, (void *)PAGE,
+  MHD_OPTION_HTTPS_MEM_KEY, key_pem,
+  MHD_OPTION_HTTPS_MEM_CERT, cert_pem,
+  MHD_OPTION_END);
+  if (d == 0){
+    free(key_pem);
+    free(cert_pem);
+    return 0;
+  }
+  while(shouldNotExit) {
+    sleep(1);
+  }
+  MHD_stop_daemon (d);
+  free(key_pem);
+  free(cert_pem);
+  return 0;
 }
 
 int main (int argc, char *const *argv)
