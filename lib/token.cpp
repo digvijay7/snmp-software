@@ -33,8 +33,6 @@ std::string generatetoken(std::string inpUsername,std::string inpPassword){
 			C.disconnect();
 			return "";
 		}
-      std::cout<<hashedPassword<<std::endl;
-      std::cout<<resultPass<<std::endl;
 	
 		else if( v[0].as<int>() == 1 )
 		{
