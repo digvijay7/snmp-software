@@ -21,24 +21,22 @@ static int shouldNotExit = 1;
 
 static int send_bad_response( struct MHD_Connection *connection, std::string content)
 {
-  std::stringstream ss;
-  ss << "<html><head><title>Error</title></head><body>" << content <<"</body></html>";
-  char * temp = (char *) std::malloc(ss.str().length()+1);
-  std::strcpy(temp,ss.str().c_str());
-
+  char * temp = (char *) std::malloc(content.length()+1);
+  std::strcpy(temp,content.c_str());
   static char * bad_response;
-  bad_response= temp;
+  bad_response = temp;
   int bad_response_len = strlen(bad_response);
   int ret;
   struct MHD_Response *response;
-  response = MHD_create_response_from_buffer ( bad_response_len,
-	        bad_response,MHD_RESPMEM_PERSISTENT);
-    if (response == 0){
-	return MHD_NO;
-    }
-    ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
+  response = MHD_create_response_from_buffer ( bad_response_len,bad_response,MHD_RESPMEM_PERSISTENT);
+  if (response == 0){
+    return MHD_NO;
+  }
+  MHD_add_response_header(response, "Content-Type", "text");
+//  MHD_add_response_header(response, "OurHeader", type);
+  ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+  MHD_destroy_response (response);
+  return ret;
 }
 
 
@@ -98,30 +96,24 @@ static int url_handler (void *cls,
   if(callapi.authenticateAPI(url_args, respdata_auth) == false){
       return send_bad_response(connection, respdata_auth);
   }
-
-    if(callapi.executeAPI(url, url_args, respdata) == false){
-       return send_bad_response(connection, "Error - bad API call");
-    }
-  
-    *ptr = 0;                  /* reset when done */
-    val = MHD_lookup_connection_value (connection, MHD_GET_ARGUMENT_KIND, "q");
-    me = (char *)malloc (respdata.size() + 1);
-    if (me == 0)
-	return MHD_NO;
-    strncpy(me, respdata.c_str(), respdata.size() + 1);
-    response = MHD_create_response_from_buffer (strlen (me), me, MHD_RESPMEM_MUST_FREE);
-
-    if (response == 0){
-	free (me);
-	return MHD_NO;
-    }
-   
-    MHD_add_response_header(response, "Content-Type", "text");
-    MHD_add_response_header(response, "OurHeader", type);
-
-    ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
+  if(callapi.executeAPI(url, url_args, respdata) == false){
+    return send_bad_response(connection, "Error - bad API call");
+  }
+  *ptr = 0;                  /* reset when done */
+  val = MHD_lookup_connection_value (connection, MHD_GET_ARGUMENT_KIND, "q");
+  me = (char *)malloc (respdata.size() + 1);
+  if (me == 0) return MHD_NO;
+  strncpy(me, respdata.c_str(), respdata.size() + 1);
+  response = MHD_create_response_from_buffer (strlen (me), me, MHD_RESPMEM_MUST_FREE);
+  if (response == 0){
+    free (me);
+    return MHD_NO;
+  }
+  MHD_add_response_header(response, "Content-Type", "text");
+  MHD_add_response_header(response, "OurHeader", type);
+  ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+  MHD_destroy_response (response);
+  return ret;
 }
 
 void handle_term(int signo)

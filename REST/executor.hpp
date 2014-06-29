@@ -22,18 +22,6 @@ public:
         TYPE_JSON, TYPE_XML   
     };
     Executor();
-	bool client(const vector<string>& args, outputType type,  string& response);
-	bool client_last(const vector<string>& args, outputType type,  string& response);
-	bool client_ondate(const vector<string>& args, outputType type,  string& response);
-	bool client_from(const vector<string>& args, outputType type,  string& response);
-	bool client_to(const vector<string>& args, outputType type,  string& response);
-	bool client_from_to(const vector<string>& args, outputType type,  string& response);
-	bool client_near(const vector<string>& args, outputType type,  string& response);
-	bool ap(const vector<string>& args, outputType type,  string& response);
-	bool ap_last(const vector<string>& args, outputType type,  string& response);
-	bool ap_ondate(const vector<string>& args, outputType type,  string& response);
-	bool ap_connections(const vector<string>& args, outputType type,  string& response);
-	bool ap_near(const vector<string>& args, outputType type,  string& response);
 	bool uid(const args_container & args, outputType type,  string& response);
   bool last(const args_container & args, outputType type,  string& response,const string & url);
   bool std(const args_container & args, outputType type,  string & response,const string & url);
