@@ -62,9 +62,7 @@ bool Executor::last(const args_container &args, outputType type, string & respon
   else { // Not yet implemented API or invalid API
     return false;
   }
-  //ss << " and ts >= to_timestamp('" << args.from <<"','"<<args.format<<"') ";
-  //ss << " and ts <= to_timestamp('" << args.to << "','" << args.format << "')";
-  ss << " order by ts desc limit " << args.last <<" ;";
+  ss << " order by ts limit " << args.last <<" ;";
   return Executor::generic_query(response,ss.str(),VALID_API_LAST);
 }
 
@@ -115,7 +113,37 @@ For Harkirat - duration function
 ************************************************
 */
 bool format_entries(pqxx::result & res, std::string & response){
-  bool ret=false;
+  bool ret = true;
+  size_t curr = 0;
+  size_t prev = curr;
+  while(curr < res.size()){
+    if(res[curr][4].as<int>() == 1){
+      if(res[curr][0].as<int>() == res[prev][0].as<int>()){
+        // do nothing associated at same place
+      }
+      else{ // associated to a new AP
+        std::cout<<"Connected to:"<<res[prev][0]<<" from:"<<res[prev][2];
+        std::cout<<" to:"<<res[curr][2]<<std::endl;
+        prev = curr;
+      }
+    }
+    else if(res[curr][4].as<int>()==2){
+      if(res[curr][0].as<int>() == res[prev][0].as<int>()){
+        std::cout<<"Connected to:"<<res[prev][0]<<" from:"<<res[prev][2];
+        std::cout<<" to:"<<res[curr][2]<<std::endl;
+        prev = curr+1;
+      }
+      else{
+        // do nothing, recieved late deauth trap
+      }
+    }
+    curr++;
+  }
+  // Take care of last record
+  if(prev < res.size() && res[prev][4].as<int>()==1){
+    std::cout<<"Connected to:"<<res[prev][0]<<" from:"<<res[prev][2];
+    std::cout<<" to:NA"<<std::endl;
+  }
   return ret;
 }
 
@@ -138,6 +166,7 @@ bool Executor::generic_query(string & response, const string query,unsigned int 
       return write_uid(res,response);
     }
     else if(type == VALID_API_LAST){
+      format_entries(res,response);
       return write_last_std(res,response);
     }
     else if(type == VALID_API_STD){
