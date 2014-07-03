@@ -122,25 +122,35 @@ Comment End
 ---
 ************************************************
 */
+inline ptree make_node(int device, string from, string to){
+	ptree child;
+	child.put("Connected to:",device);
+	child.put("From:",from);
+	child.put("To:",to);
+	return child;
+}
+
 bool format_entries(pqxx::result & res, std::string & response){
-  bool ret = true;
   size_t curr = 0;
   size_t prev = curr;
+
+  ptree root_t,child,children;
+  root_t.put("client_id",res[curr][1]);
   while(curr < res.size()){
     if(res[curr][4].as<int>() == 1){
       if(res[curr][0].as<int>() == res[prev][0].as<int>()){
         // do nothing associated at same place
       }
       else{ // associated to a new AP
-        std::cout<<"Connected to:"<<res[prev][0]<<" from:"<<res[prev][2];
-        std::cout<<" to:"<<res[curr][2]<<std::endl;
+	child = make_node (res[prev][0].as<int>(), res[prev][2].as<string>(), res[curr][2].as<string>() );
+	children.push_back(make_pair("",child));
         prev = curr;
       }
     }
     else if(res[curr][4].as<int>()==2){
       if(res[curr][0].as<int>() == res[prev][0].as<int>()){
-        std::cout<<"Connected to:"<<res[prev][0]<<" from:"<<res[prev][2];
-        std::cout<<" to:"<<res[curr][2]<<std::endl;
+	child =	make_node (res[prev][0].as<int>(), res[prev][2].as<string>(), res[curr][2].as<string>() );
+	children.push_back(make_pair("",child));
         prev = curr+1;
       }
       else{
@@ -151,10 +161,14 @@ bool format_entries(pqxx::result & res, std::string & response){
   }
   // Take care of last record
   if(prev < res.size() && res[prev][4].as<int>()==1){
-    std::cout<<"Connected to:"<<res[prev][0]<<" from:"<<res[prev][2];
-    std::cout<<" to:NA"<<std::endl;
+    child = make_node (res[prev][0].as<int>(), res[prev][2].as<string>(), "NA" );
+    children.push_back(make_pair("",child));
   }
-  return ret;
+  root_t.add_child("log entries",children);
+  std::stringstream ss;
+  write_json(ss,root_t);
+  response = ss.str();
+  return true;
 }
 
 /*
