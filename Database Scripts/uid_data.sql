@@ -10,6 +10,57 @@ SET client_min_messages = warning;
 
 SET search_path = public, pg_catalog;
 
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: uid; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE uid (
+    uid integer NOT NULL,
+    mac character varying(17),
+    hash bytea,
+    batch character varying,
+    access integer DEFAULT 0 NOT NULL,
+    ip character varying(15),
+    rollno character varying,
+    email character varying,
+    type character varying
+);
+
+
+ALTER TABLE public.uid OWNER TO postgres;
+
+--
+-- Name: uid_uid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE uid_uid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.uid_uid_seq OWNER TO postgres;
+
+--
+-- Name: uid_uid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE uid_uid_seq OWNED BY uid.uid;
+
+
+--
+-- Name: uid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY uid ALTER COLUMN uid SET DEFAULT nextval('uid_uid_seq'::regclass);
+
+
 --
 -- Data for Name: uid; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -3045,6 +3096,14 @@ COPY uid (uid, mac, hash, batch, access, ip, rollno, email, type) FROM stdin;
 --
 
 SELECT pg_catalog.setval('uid_uid_seq', 7608, true);
+
+
+--
+-- Name: uid_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY uid
+    ADD CONSTRAINT uid_pkey PRIMARY KEY (uid);
 
 
 --
