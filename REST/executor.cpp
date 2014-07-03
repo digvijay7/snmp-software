@@ -110,6 +110,16 @@ bool Executor::std(const args_container &args, outputType type, string & respons
 /*
 ************************************************
 For Harkirat - duration function
+---
+Comment on 3rd July 2014: @Harkirat - wherever there is a cout,
+make a child and add it to the ptree
+Email me once you are done.
+Issue a pull request after testing.
+(Remember only one pull request is allowed per branch so rember, to do it in
+a sperate branch.)
+Extra note: I would advise you to create an inline function with make a node with the connected to, from and to information and returns a reference to the child ptree.
+Comment End
+---
 ************************************************
 */
 bool format_entries(pqxx::result & res, std::string & response){
@@ -166,11 +176,12 @@ bool Executor::generic_query(string & response, const string query,unsigned int 
       return write_uid(res,response);
     }
     else if(type == VALID_API_LAST){
-      format_entries(res,response);
-      return write_last_std(res,response);
+      format_entries(res,response); 
+      std::cout<<response<<std::endl; // Added temporarily for testing
+      return write_last_std(res,response); // This will be replaced by format_entries()
     }
     else if(type == VALID_API_STD){
-      return write_last_std(res,response);
+      return write_last_std(res,response); // This will be replaced by format_entries()
     }
   }
   catch(const std::exception & e){
