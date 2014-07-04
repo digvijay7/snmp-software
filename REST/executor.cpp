@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
-//
+#include <string>
 #include <stdint.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -62,7 +62,13 @@ bool Executor::last(const args_container &args, outputType type, string & respon
   else { // Not yet implemented API or invalid API
     return false;
   }
-  ss << " order by ts limit " << args.last <<" ;";
+  if(atoi(args.last.c_str()) > MAX_ENTRIES){
+    ss << " order by ts limit " << MAX_ENTRIES <<" ;";
+  }
+  else {
+    ss << " order by ts limit " << args.last <<" ;";
+  }
+
   return Executor::generic_query(response,ss.str(),VALID_API_LAST);
 }
 
@@ -104,22 +110,12 @@ bool Executor::std(const args_container &args, outputType type, string & respons
   }
   ss << " and ts >= to_timestamp('" << args.from <<"','"<<args.format<<"') ";
   ss << " and ts <= to_timestamp('" << args.to << "','" << args.format << "')";
-  ss << " order by ts desc;";
+  ss << " order by ts desc limit "<< MAX_ENTRIES << ";";
   return Executor::generic_query(response,ss.str(),VALID_API_STD);
 }
 /*
 ************************************************
-For Harkirat - duration function
----
-Comment on 3rd July 2014: @Harkirat - wherever there is a cout,
-make a child and add it to the ptree
-Email me once you are done.
-Issue a pull request after testing.
-(Remember only one pull request is allowed per branch so rember, to do it in
-a sperate branch.)
-Extra note: I would advise you to create an inline function with make a node with the connected to, from and to information and returns a reference to the child ptree.
-Comment End
----
+Function to generate output suitable to parse as duration
 ************************************************
 */
 inline ptree make_node(int device, string from, string to){
@@ -136,6 +132,7 @@ bool format_entries(pqxx::result & res, std::string & response){
 
   ptree root_t,child,children;
   root_t.put("client_id",res[curr][1]);
+  root_t.put("size",res.size());
   while(curr < res.size()){
     if(res[curr][4].as<int>() == 1){
       if(res[curr][0].as<int>() == res[prev][0].as<int>()){

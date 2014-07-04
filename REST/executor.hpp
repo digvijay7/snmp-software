@@ -39,7 +39,7 @@ private:
 #define VALID_API_STD 15  // Valid API "standard" - come up with better names
 #define VALID_API_LAST 17 // Valid "last" n connections api
 #define VALID_API_MAC 32 // Valid API to get the uid form the MAC
-
+#define MAX_ENTRIES 1000
 
 struct args_container{
   unsigned int type;
