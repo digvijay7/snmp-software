@@ -36,6 +36,8 @@ BEGIN
 END
 $$
 LANGUAGE 'plpgsql';
+
+
   
 CREATE OR REPLACE FUNCTION device_std(varchar, varchar, varchar,int) 
 RETURNS TABLE (device_id int, client_id int, fro timestamp, tro timestamp) AS
@@ -56,32 +58,33 @@ BEGIN
 
   CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
 
-  FOR row2 IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type from logs l
-  WHERE id = l.device_id and l.ts >= from_time and l.ts <= to_time
-  ORDER BY l.ts 
+  FOR row2 IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type
+  FROM logs l LEFT JOIN uid u ON (l.client_id = u.uid)
+  WHERE id = l.device_id and l.ts >= from_time and l.ts <= to_time and u.access >= 1
+  ORDER BY l.client_id,l.ts 
   LOOP
     IF flag = 0 THEN
       flag := 1;
       prev_row := row2;
     END IF;
-    
-    IF row2.type = 1 THEN
-      IF row2.device_id = prev_row.device_id THEN
-        NULL;
-      ELSE
-        INSERT INTO tmptable(device_id,client_id,fro,tro) VALUES
-        (id,prev_row.client_id,prev_row.ts,row2.ts);
-        prev_row := row2;
-      END IF;
-    ELSIF row2.type = 2 THEN
-      IF row2.device_id = prev_row.device_id THEN
-        INSERT INTO tmptable(device_id,client_id,fro,tro) VALUES
-        (id,prev_row.client_id,prev_row.ts,row2.ts);
-        flag := 0;
-      END IF;
+    IF prev_row.client_id != row2.client_id THEN
+      INSERT INTO tmptable(device_id,client_id,fro) VALUES
+      (id,prev_row.client_id,prev_row.ts);
+      prev_row := row2;
+    END IF;
+
+    IF row2.type = 1 and prev_row.type = 2 THEN
+      prev_row := row2;
+    ELSIF row2.type = 2 and prev_row.type = 1 THEN
+      INSERT INTO tmptable(device_id,client_id,fro,tro)
+      VALUES (id,prev_row.client_id,prev_row.ts,row2.ts);
+      flag := 0;
+    ELSE
+      -- Do nothing
+      NULL;
     END IF;
   END LOOP;
-  IF prev_row.type = 1 THEN
+  IF prev_row.type = 1 and flag = 1 THEN
     INSERT INTO tmptable(device_id,client_id,fro) VALUES
     (id,prev_row.client_id,prev_row.ts);
   END IF;

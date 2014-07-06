@@ -75,14 +75,24 @@ bool Executor::last(const args_container &args, outputType type, string & respon
 bool write_last_std(pqxx::result & res, string & response){
 	ptree root_t;
   ptree children;
-  root_t.put("size",res.size());
+  unsigned int size;
+  std::string limit_reached; // yes or no
+  if(res.size() > MAX_ENTRIES){
+    size = MAX_ENTRIES;
+    limit_reached = "yes";
+  }
+  else{
+    size = res.size();
+    limit_reached = "no";
+  }
+  root_t.put("size",size);
+  root_t.put("limit reached",limit_reached);
   for(unsigned int rownum = 0 ;rownum < res.size(); rownum++){
     ptree child;
     child.put("device_id",res[rownum][0]);
     child.put("client_id",res[rownum][1]);
-    child.put("ts",res[rownum][2]);
-    child.put("label",res[rownum][3]);
-    child.put("type",res[rownum][4]);
+    child.put("from",res[rownum][2]);
+    child.put("to",res[rownum][3]);
     children.push_back(make_pair("",child));
   }
   root_t.add_child("log entries",children);
@@ -98,19 +108,19 @@ Getting entries between two dates+times function
 */
 bool Executor::std(const args_container &args, outputType type, string & response,const string & url){
   std::stringstream ss;
-  ss << " select device_id,client_id,ts,label,type from logs where ";
   if( url == "/client"){
-    ss << " client_id = " << args.uid;
+    ss << "select * from client_std('" << args.from <<"','" << args.to << "','";
+    ss << args.format << "',"<<args.uid<<")";
   }
   else if( url == "/ap"){
-    ss << " device_id = " << args.uid;
+    ss << "select * from device_std('" << args.from <<"','" << args.to << "','";
+    ss << args.format << "',"<<args.uid<<")";
   }
   else { // Not yet implemented API or invalid API
     return false;
   }
-  ss << " and ts >= to_timestamp('" << args.from <<"','"<<args.format<<"') ";
-  ss << " and ts <= to_timestamp('" << args.to << "','" << args.format << "')";
-  ss << " order by ts desc limit "<< MAX_ENTRIES << ";";
+  ss << " order by fro limit "<< MAX_ENTRIES + 1 << ";"; // +1 to check if limit exceeded
+  std::cout<<"Making query:"<<ss.str()<<std::endl;
   return Executor::generic_query(response,ss.str(),VALID_API_STD);
 }
 /*
@@ -187,8 +197,6 @@ bool Executor::generic_query(string & response, const string query,unsigned int 
       return write_uid(res,response);
     }
     else if(type == VALID_API_LAST){
-      format_entries(res,response); 
-      std::cout<<response<<std::endl; // Added temporarily for testing
       return write_last_std(res,response); // This will be replaced by format_entries()
     }
     else if(type == VALID_API_STD){
