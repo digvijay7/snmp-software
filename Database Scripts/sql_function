@@ -9,7 +9,138 @@ end
 $$
 LANGUAGE plpgsql;
 
-CREATE or REPLACE function get_count(varchar,varchar,varchar) returns table(device_id int, count int) as
+CREATE OR REPLACE FUNCTION all_client_std(varchar,varchar,varchar)
+RETURNS TABLE (device_id int,client_id int, fro timestamp, tro timestamp) AS
 $$
-begin
-select distinc
+DECLARE
+  from_time timestamp;
+  to_time timestamp;
+  id logs.client_id%TYPE;
+  access uid.access%TYPE;
+BEGIN
+  from_time := to_timestamp($1,$3);
+  to_time := to_timestamp($2,$3);
+  CREATE TEMP TABLE tmptable (device_id int, client_id int, fro timestamp, tro timestamp) ON COMMIT DROP;
+  
+  FOR id IN SELECT DISTINCT l.client_id from logs l
+  WHERE l.ts >= from_time and l.ts <= to_time
+  ORDER BY l.client_id
+  LOOP
+    -- Check if access greater than 0
+    SELECT u.access into access from uid u where u.uid = id;
+    IF access IS NOT NULL and access >= 1 THEN
+      PERFORM  * FROM client_std($1,$2,$3,id);
+    END IF;
+  END LOOP;
+  RETURN QUERY SELECT t.device_id as device_id,t.client_id as client_id, t.fro as from, t.tro as to FROM tmptable t;
+END
+$$
+LANGUAGE 'plpgsql';
+  
+CREATE OR REPLACE FUNCTION device_std(varchar, varchar, varchar,int) 
+RETURNS TABLE (device_id int, client_id int, fro timestamp, tro timestamp) AS
+$$
+DECLARE
+  row1 logs.client_id%TYPE;
+  from_time timestamp;
+  to_time timestamp;
+  row2 logs%rowtype;
+  prev_row logs%rowtype;
+  id logs.device_id%TYPE;
+  flag int;
+BEGIN
+  from_time := to_timestamp($1,$3);
+  to_time := to_timestamp($2,$3);
+  id := $4;
+  flag := 0;
+
+  CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
+
+  FOR row2 IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type from logs l
+  WHERE id = l.device_id and l.ts >= from_time and l.ts <= to_time
+  ORDER BY l.ts 
+  LOOP
+    IF flag = 0 THEN
+      flag := 1;
+      prev_row := row2;
+    END IF;
+    
+    IF row2.type = 1 THEN
+      IF row2.device_id = prev_row.device_id THEN
+        NULL;
+      ELSE
+        INSERT INTO tmptable(device_id,client_id,fro,tro) VALUES
+        (id,prev_row.client_id,prev_row.ts,row2.ts);
+        prev_row := row2;
+      END IF;
+    ELSIF row2.type = 2 THEN
+      IF row2.device_id = prev_row.device_id THEN
+        INSERT INTO tmptable(device_id,client_id,fro,tro) VALUES
+        (id,prev_row.client_id,prev_row.ts,row2.ts);
+        flag := 0;
+      END IF;
+    END IF;
+  END LOOP;
+  IF prev_row.type = 1 THEN
+    INSERT INTO tmptable(device_id,client_id,fro) VALUES
+    (id,prev_row.client_id,prev_row.ts);
+  END IF;
+  RETURN QUERY SELECT t.device_id,t.client_id,t.fro,t.tro from tmptable t;
+END
+$$
+LANGUAGE 'plpgsql';
+
+
+CREATE OR REPLACE FUNCTION client_std(varchar, varchar, varchar,int) 
+RETURNS TABLE (device_id int, client_id int, fro timestamp, tro timestamp) AS
+$$
+DECLARE
+  row1 logs.client_id%TYPE;
+  from_time timestamp;
+  to_time timestamp;
+  row2 logs%rowtype;
+  prev_row logs%rowtype;
+  id logs.client_id%TYPE;
+  flag int;
+BEGIN
+  from_time := to_timestamp($1,$3);
+  to_time := to_timestamp($2,$3);
+  id := $4;
+  flag := 0;
+
+  CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
+
+  FOR row2 IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type from logs l
+  WHERE id = l.client_id and l.ts >= from_time and l.ts <= to_time
+  ORDER BY l.ts 
+  LOOP
+    IF flag = 0 THEN
+      flag := 1;
+      prev_row := row2;
+    END IF;
+    
+    IF row2.type = 1 THEN
+      IF row2.device_id = prev_row.device_id THEN
+        NULL;
+      ELSE
+        INSERT INTO tmptable(device_id,client_id,fro,tro) VALUES
+        (prev_row.device_id,id,prev_row.ts,row2.ts);
+        prev_row := row2;
+      END IF;
+    ELSIF row2.type = 2 THEN
+      IF row2.device_id = prev_row.device_id THEN
+        INSERT INTO tmptable(device_id,client_id,fro,tro) VALUES
+        (prev_row.device_id,id,prev_row.ts,row2.ts);
+        flag := 0;
+      END IF;
+    END IF;
+  END LOOP;
+  IF prev_row.type = 1 THEN
+    INSERT INTO tmptable(device_id,client_id,fro) VALUES
+    (prev_row.device_id,id,prev_row.ts);
+  END IF;
+  RETURN QUERY SELECT t.device_id,t.client_id,t.fro,t.tro from tmptable t;
+END
+$$
+LANGUAGE 'plpgsql';
+
