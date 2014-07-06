@@ -1,7 +1,7 @@
 CREATE OR REPLACE function get_count(varchar, varchar, varchar) returns table (device_id int, client_id int,ts timestamp, label varchar, type int) as
 $$
 begin
-create temp table real_from (id int, ts timestamp);
+create temp table if not exists real_from (id int, ts timestamp);
 insert into real_from (select logs.client_id,max(logs.ts) from logs where logs.ts < to_timestamp($1,$3) and logs.type = 1 group by logs.client_id);
 return query select logs.device_id,logs.client_id,logs.ts,logs.label,logs.type from logs left join real_from on logs.client_id = real_from.id and logs.ts >= real_from.ts and logs.ts <= to_timestamp($2,$3);
 end
