@@ -243,7 +243,7 @@ BEGIN
   CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
   
   IF access < 1 THEN
-    RETURN NULL;
+    RETURN QUERY SELECT * FROM tmptable;
   END IF;
 
   FOR row2 IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type from logs l
