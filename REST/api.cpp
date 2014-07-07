@@ -110,10 +110,10 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
     response = "Invalid API call - invalid URL";
     return false;
   }
-  else if(((args_type & VALID_ARGS_STD) == 0) // Check Args
-     and ((args_type & VALID_ARGS_LAST) == 0)
-     and ((args_type & VALID_ARGS_MAC) == 0)
-     and ((args_type & VALID_ARGS_COUNT) == 0)){
+  else if(((args_type != VALID_ARGS_STD) ) // Check Args
+     and ((args_type != VALID_ARGS_LAST) )
+     and ((args_type != VALID_ARGS_MAC) )
+     and ((args_type != VALID_ARGS_COUNT) )){
     response = "Invalid API call - invalid arguments";
     return false;
   }
