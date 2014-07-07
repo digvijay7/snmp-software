@@ -149,7 +149,7 @@ static int url_handler (void *cls,
       return send_bad_response(connection, respdata_auth);
   }
   if(callapi.executeAPI(url, url_args, respdata) == false){
-    return send_bad_response(connection, "Error - bad API call");
+    return send_bad_response(connection, respdata);
   }
   *ptr = 0;                  /* reset when done */
   val = MHD_lookup_connection_value (connection, MHD_GET_ARGUMENT_KIND, "q");

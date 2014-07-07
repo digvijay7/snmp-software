@@ -34,7 +34,7 @@ Getting UID from MAC functions
 bool Executor::uid(const args_container &args, outputType type, string & response){
 	std::stringstream ss;
 	ss << "SELECT uid from uid where hash=decode('"<< generatehash(args.mac)<<"','hex');";
-	return Executor::generic_query(response,ss.str(),VALID_API_MAC);
+	return Executor::generic_query(response,ss.str(),VALID_ARGS_MAC);
 }
 
 bool write_uid(pqxx::result & res,string & response){
@@ -48,28 +48,27 @@ bool write_uid(pqxx::result & res,string & response){
 /*
 *******************************
 Getting last N entries function
-89-*******************************
+*******************************
 */
 bool Executor::last(const args_container &args, outputType type, string & response,const string & url){
   std::stringstream ss;
-  ss << " select device_id,client_id,ts,label,type from logs where ";
   if( url == "/client"){
-    ss << " client_id = " << args.uid;
+    ss << "select * from client_last(" << args.uid <<")";
   }
   else if( url == "/ap"){
-    ss << " device_id = " << args.uid;
+    ss << "select * from device_last(" << args.uid << ")";
   }
   else { // Not yet implemented API or invalid API
     return false;
   }
   if(atoi(args.last.c_str()) > MAX_ENTRIES){
-    ss << " order by ts limit " << MAX_ENTRIES <<" ;";
+    ss << " order by fro limit " << MAX_ENTRIES + 1<<" ;";
   }
   else {
-    ss << " order by ts limit " << args.last <<" ;";
+    ss << " order by fro limit " << args.last <<" ;";
   }
-
-  return Executor::generic_query(response,ss.str(),VALID_API_LAST);
+  //std::cout<<"Query:"<<ss.str()<<std::endl;
+  return Executor::generic_query(response,ss.str(),VALID_ARGS_LAST);
 }
 
 bool write_last_std(pqxx::result & res, string & response){
@@ -102,6 +101,18 @@ bool write_last_std(pqxx::result & res, string & response){
   return true;
 }
 /*
+*****************************************************************
+COUNT API - returns count of distinct connections made to all APs
+*****************************************************************
+*/
+bool Executor::count(const args_container &args, outputType type, string & response,const string & url){
+  std::stringstream ss;
+  ss << "SELECT * FROM all_count('" << args.from <<"','";
+  ss << args.to << "','" << args.format<<"');";
+  std::cout <<"Making query:" << ss.str() << std::endl;
+  return Executor::generic_query(response,ss.str(),VALID_ARGS_COUNT);
+}
+/*
 ************************************************
 Getting entries between two dates+times function
 ************************************************
@@ -121,57 +132,23 @@ bool Executor::std(const args_container &args, outputType type, string & respons
   }
   ss << " order by fro limit "<< MAX_ENTRIES + 1 << ";"; // +1 to check if limit exceeded
   std::cout<<"Making query:"<<ss.str()<<std::endl;
-  return Executor::generic_query(response,ss.str(),VALID_API_STD);
+  return Executor::generic_query(response,ss.str(),VALID_ARGS_STD);
 }
 /*
 ************************************************
-Function to generate output suitable to parse as duration
+Function to generate json for count type queries
 ************************************************
 */
-inline ptree make_node(int device, string from, string to){
-	ptree child;
-	child.put("Connected to:",device);
-	child.put("From:",from);
-	child.put("To:",to);
-	return child;
-}
-
-bool format_entries(pqxx::result & res, std::string & response){
-  size_t curr = 0;
-  size_t prev = curr;
-
-  ptree root_t,child,children;
-  root_t.put("client_id",res[curr][1]);
-  root_t.put("size",res.size());
-  while(curr < res.size()){
-    if(res[curr][4].as<int>() == 1){
-      if(res[curr][0].as<int>() == res[prev][0].as<int>()){
-        // do nothing associated at same place
-      }
-      else{ // associated to a new AP
-	child = make_node (res[prev][0].as<int>(), res[prev][2].as<string>(), res[curr][2].as<string>() );
-	children.push_back(make_pair("",child));
-        prev = curr;
-      }
-    }
-    else if(res[curr][4].as<int>()==2){
-      if(res[curr][0].as<int>() == res[prev][0].as<int>()){
-	child =	make_node (res[prev][0].as<int>(), res[prev][2].as<string>(), res[curr][2].as<string>() );
-	children.push_back(make_pair("",child));
-        prev = curr+1;
-      }
-      else{
-        // do nothing, recieved late deauth trap
-      }
-    }
-    curr++;
-  }
-  // Take care of last record
-  if(prev < res.size() && res[prev][4].as<int>()==1){
-    child = make_node (res[prev][0].as<int>(), res[prev][2].as<string>(), "NA" );
+bool write_count(pqxx::result & res, std::string & response){
+  ptree root_t,children;
+  for(size_t i = 0; i<res.size(); i++){
+    ptree child;
+    child.put("device_id",res[i][0]);
+    child.put("batch",res[i][1]);
+    child.put("count",res[i][2]);
     children.push_back(make_pair("",child));
   }
-  root_t.add_child("log entries",children);
+  root_t.add_child("counts",children);
   std::stringstream ss;
   write_json(ss,root_t);
   response = ss.str();
@@ -193,14 +170,17 @@ bool Executor::generic_query(string & response, const string query,unsigned int 
     pqxx::result res = w.exec(query);
     w.commit();
     //TBD: Maybe some checking on pqxx::result itself
-    if(type == VALID_API_MAC){
+    if(type == VALID_ARGS_MAC){
       return write_uid(res,response);
     }
-    else if(type == VALID_API_LAST){
-      return write_last_std(res,response); // This will be replaced by format_entries()
+    else if(type == VALID_ARGS_LAST){
+      return write_last_std(res,response); 
     }
-    else if(type == VALID_API_STD){
-      return write_last_std(res,response); // This will be replaced by format_entries()
+    else if(type == VALID_ARGS_STD){
+      return write_last_std(res,response); 
+    }
+    else if(type == VALID_ARGS_COUNT){
+      return write_count(res,response);
     }
   }
   catch(const std::exception & e){

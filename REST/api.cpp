@@ -45,9 +45,10 @@ bool api::authenticateAPI( const map<string, string>& argvals, string& response)
   }
 }
 
+
 unsigned int fill_args(const map<string,string> & args, struct args_container & params){
   map<string,string>::const_iterator it = args.begin();
-  unsigned int result=0;
+  unsigned int result=INVALID_ARGS;
   while(it!=args.end()){
     if(it->first == "uid"){
       result |= AUID;
@@ -79,6 +80,22 @@ unsigned int fill_args(const map<string,string> & args, struct args_container & 
   return result;
 }
 
+unsigned int url_type(const std::string & url){
+  if(url == "/auth"){
+    return VALID_URL_AUTH;
+  }
+  else if(url == "/client"){
+    return VALID_URL_CLIENT;
+  }
+  else if(url == "/ap"){
+    return VALID_URL_AP;
+  }
+  else if(url == "/count"){
+    return VALID_URL_COUNT;
+  }
+  return INVALID_URL;
+}
+
 bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response){
   // Ignore all the args except the "fields" param 
   Executor::outputType type = Executor::TYPE_JSON;
@@ -88,9 +105,16 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
 
 	//Old comment -  Unique params will come handy when, in future we allow for multiple MACs to be sent at once.
 	string prms;
-  unsigned int api_type = fill_args(argvals,params);
-  if(api_type!= VALID_API_STD and api_type != VALID_API_LAST and api_type != VALID_API_MAC){
-    response = "Invalid API call";
+  unsigned int args_type = fill_args(argvals,params);
+  if(url_type(url) == INVALID_URL){ // Check URL
+    response = "Invalid API call - invalid URL";
+    return false;
+  }
+  else if(((args_type & VALID_ARGS_STD) == 0) // Check Args
+     and ((args_type & VALID_ARGS_LAST) == 0)
+     and ((args_type & VALID_ARGS_MAC) == 0)
+     and ((args_type & VALID_ARGS_COUNT) == 0)){
+    response = "Invalid API call - invalid arguments";
     return false;
   }
 
@@ -109,14 +133,17 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
         Executor::outputType type, string& response)
 {
   bool ret = false;
-  if(argvals.type == VALID_API_MAC){
+  if(argvals.type == VALID_ARGS_MAC){
     ret = _executor.uid(argvals,type,response);
   }
-  else if(argvals.type == VALID_API_LAST){
+  else if(argvals.type == VALID_ARGS_LAST){
     ret = _executor.last(argvals,type,response,url); // 'url' checks for '/client' or '/device'
   }
-  else if(argvals.type == VALID_API_STD){
+  else if(argvals.type == VALID_ARGS_STD){
     ret = _executor.std(argvals,type,response,url); // 'std' is used to refer to the standrd from date to to date api
+  }
+  else if(argvals.type == VALID_ARGS_COUNT){
+    ret = _executor.count(argvals,type,response,url);
   }
   return ret;
 }
