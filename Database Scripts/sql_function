@@ -37,6 +37,21 @@ END
 $$
 LANGUAGE 'plpgsql';
 
+CREATE OR REPLACE FUNCTION device_last(d_id int)
+RETURNS TABLE (device_id int, client_id int, fro timestamp, tro timestamp) AS
+$$
+DECLARE
+  from_time varchar;
+  to_time varchar;
+  format varchar;
+BEGIN
+  format := 'YYYY-MM-DD HH24:MI:SS';
+  from_time := to_char(now() - interval '1 hour',format);
+  to_time := to_char(now(),format);
+  RETURN QUERY SELECT * from device_std(from_time,to_time,format,d_id);
+END
+$$
+LANGUAGE 'plpgsql';
 
   
 CREATE OR REPLACE FUNCTION device_std(varchar, varchar, varchar,int) 
@@ -89,6 +104,27 @@ BEGIN
     (id,prev_row.client_id,prev_row.ts);
   END IF;
   RETURN QUERY SELECT t.device_id,t.client_id,t.fro,t.tro from tmptable t;
+END
+$$
+LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION client_last(c_id int)
+RETURNS TABLE (device_id int, client_id int, fro timestamp, tro timestamp) AS
+$$
+DECLARE
+  from_time varchar;
+  to_time varchar;
+  format varchar;
+  access int;
+BEGIN
+  format := 'YYYY-MM-DD HH24:MI:SS';
+  from_time := to_char(now() - interval '1 hour',format);
+  to_time := to_char(now(),format);
+  SELECT u.access INTO access FROM uid u
+  WHERE u.uid = c_id;
+  IF access >= 1 THEN
+    RETURN QUERY SELECT * from client_std(from_time,to_time,format,c_id);
+  END IF;
 END
 $$
 LANGUAGE 'plpgsql';
