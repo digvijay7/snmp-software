@@ -239,13 +239,12 @@ BEGIN
   SELECT u.access INTO access FROM uid u
   WHERE u.uid = id;
 
-  
-  CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
-  
-  IF access < 1 THEN
-    RETURN QUERY SELECT * FROM tmptable;
+  IF access = 0 THEN
+    RETURN;
   END IF;
 
+  CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
+  
   FOR row2 IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type from logs l
   WHERE id = l.client_id and l.ts >= from_time and l.ts <= to_time
   ORDER BY l.ts 
