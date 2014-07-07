@@ -185,7 +185,10 @@ void* http(void *arg)
     std::cout<<"The key/certificate files could not be read\n";
     return 0;
   }
-  d = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG | MHD_USE_POLL | MHD_USE_SSL,
+  d = MHD_start_daemon (MHD_USE_THREAD_PER_CONNECTION
+   | MHD_USE_DEBUG
+   | MHD_USE_POLL
+   | MHD_USE_SSL,
   *port,0, 0, &url_handler, (void *)PAGE,
   MHD_OPTION_HTTPS_MEM_KEY, key_pem,
   MHD_OPTION_HTTPS_MEM_CERT, cert_pem,
