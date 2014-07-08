@@ -93,6 +93,9 @@ unsigned int url_type(const std::string & url){
   else if(url == "/count"){
     return VALID_URL_COUNT;
   }
+  else if(url == "/live"){
+    return VALID_URL_LIVE;
+  }
   return INVALID_URL;
 }
 
@@ -106,14 +109,16 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
 	//Old comment -  Unique params will come handy when, in future we allow for multiple MACs to be sent at once.
 	string prms;
   unsigned int args_type = fill_args(argvals,params);
+
   if(url_type(url) == INVALID_URL){ // Check URL
     response = "Invalid API call - invalid URL";
     return false;
   }
-  else if(((args_type & VALID_ARGS_STD) == 0) // Check Args
-     and ((args_type & VALID_ARGS_LAST) == 0)
-     and ((args_type & VALID_ARGS_MAC) == 0)
-     and ((args_type & VALID_ARGS_COUNT) == 0)){
+  else if( (args_type != VALID_ARGS_STD) // Check Args
+     and (args_type != VALID_ARGS_LAST)
+     and (args_type != VALID_ARGS_MAC)
+     and (args_type != VALID_ARGS_COUNT) 
+     and (args_type != VALID_ARGS_LIVE) ){
     response = "Invalid API call - invalid arguments";
     return false;
   }
@@ -144,6 +149,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   }
   else if(argvals.type == VALID_ARGS_COUNT){
     ret = _executor.count(argvals,type,response,url);
+  }
+  else if(argvals.type == VALID_ARGS_LIVE){
+    ret = _executor.live(argvals,type,response,url);
   }
   return ret;
 }

@@ -26,6 +26,7 @@ public:
   bool last(const args_container & args, outputType type,  string& response,const string & url);
   bool std(const args_container & args, outputType type,  string & response,const string & url);
   bool count(const args_container &args, outputType type, string & response,const string & url);
+  bool live(const args_container &args, outputType type, string & response,const string & url);
 private:
 	bool generic_query(const vector<string>& args, outputType type,  string& response,string query,int t);
   bool generic_query(string & response, string query,unsigned int type);
@@ -45,8 +46,10 @@ private:
 #define VALID_URL_CLIENT 128
 #define VALID_URL_AP 256
 #define VALID_URL_COUNT 512
+#define VALID_URL_LIVE 1024
 #define INVALID_URL 0
 #define INVALID_ARGS 0
+#define VALID_ARGS_LIVE 0
 #define VALID_ARGS_STD 15  // Valid ARGS for "standard" query - come up with better names
 #define VALID_ARGS_LAST 17 // Valid args for "last" n connections query
 #define VALID_ARGS_MAC 32 // Valid args to get the uid form the MAC

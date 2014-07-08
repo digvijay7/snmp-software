@@ -154,7 +154,38 @@ bool write_count(pqxx::result & res, std::string & response){
   response = ss.str();
   return true;
 }
+/*
+********************************
+Function to get live connections
+********************************
+*/
+bool Executor::live(const args_container &args, outputType type, string & response,const string & url){
+	std::stringstream ss;
+	if(url == "/live"){
+		ss << "SELECT * from get_live_table()";
+		return Executor::generic_query(response,ss.str(),VALID_ARGS_LIVE);
+	}
+	else{
+		return false;
+	}
+}
 
+bool write_live(pqxx::result & res, std::string & response){
+  ptree root_t,children;
+  root_t.put("size",res.size());
+  for(unsigned int row = 0 ;row < res.size(); row++){
+    ptree child;
+    child.put("client_id",res[row][0]);
+    child.put("device_id",res[row][1]);
+    child.put("timestamp",res[row][2]);
+    children.push_back(make_pair("",child));
+  }
+  root_t.add_child("live connections",children);
+  std::stringstream ss;
+  write_json(ss,root_t);
+  response = ss.str();
+  return true;
+}
 /*
 *****************************
 Function to execute SQL query
@@ -176,11 +207,14 @@ bool Executor::generic_query(string & response, const string query,unsigned int 
     else if(type == VALID_ARGS_LAST){
       return write_last_std(res,response); 
     }
-    else if(type == VALID_ARGS_STD){
+    else if(type == VALID_ARGS_STD){	
       return write_last_std(res,response); 
     }
     else if(type == VALID_ARGS_COUNT){
       return write_count(res,response);
+    }
+    else if(type == VALID_ARGS_LIVE){
+      return write_live(res,response);
     }
   }
   catch(const std::exception & e){
