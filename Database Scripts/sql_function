@@ -281,7 +281,10 @@ LANGUAGE 'plpgsql';
 
 CREATE OR REPLACE FUNCTION get_live_table() RETURNS TABLE (c_id int, d_id int, tstamp timestamp) AS $$
 	BEGIN
-		RETURN QUERY SELECT client_id, device_id, ts FROM live_table;
+		RETURN QUERY SELECT client_id, device_id, ts 
+		FROM live_table LEFT OUTER JOIN uid 
+		ON (live_table.client_id=uid.uid)
+		where uid.access >=1;
 	END
 $$ LANGUAGE plpgsql;
 
