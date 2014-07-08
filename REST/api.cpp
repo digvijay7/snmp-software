@@ -151,7 +151,7 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
     ret = _executor.count(argvals,type,response,url);
   }
   else if(_executor.get_type() == VALID_API_LIVE){
-    // Add live function
+    ret = _executor.live(argvals,type,response,url);
   }
   return ret;
 }
