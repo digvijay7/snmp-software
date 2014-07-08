@@ -288,3 +288,31 @@ CREATE OR REPLACE FUNCTION get_live_table() RETURNS TABLE (c_id int, d_id int, t
 	END
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION function_live_logs() RETURNS TRIGGER AS $trigger_live_logs$
+	DECLARE
+		res RECORD;
+		foundFlag INTEGER :=0;
+	BEGIN
+		IF (NEW.type =1) THEN
+			FOR res IN SELECT * FROM live_table where live_table.client_id = NEW.client_id LOOP
+				foundFlag :=1;
+				IF (NEW.device_id != res.device_id ) THEN
+					UPDATE live_table SET device_id = NEW.device_id,ts = NEW.ts where client_id = NEW.client_id;
+					END IF;
+			END LOOP;
+			IF (foundFlag =0) THEN
+				INSERT INTO live_table VALUES(NEW.client_id, NEW.device_id, NEW.ts);
+			END IF;
+		END IF;
+		IF (NEW.type =2) THEN
+			FOR res IN SELECT * FROM live_table where live_table.client_id = NEW.client_id LOOP
+				IF(NEW.device_id = res.device_id) THEN
+					DELETE FROM live_table where client_id = NEW.client_id;
+				END IF;
+			END LOOP;
+		END IF;
+		RETURN NULL;
+	END;
+$trigger_live_logs$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_live_logs AFTER INSERT ON logs FOR EACH ROW EXECUTE PROCEDURE function_live_logs();

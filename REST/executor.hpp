@@ -27,9 +27,12 @@ public:
   bool std(const args_container & args, outputType type,  string & response,const string & url);
   bool count(const args_container &args, outputType type, string & response,const string & url);
   bool live(const args_container &args, outputType type, string & response,const string & url);
+  void set_type(unsigned int q) {query_type = q;};
+  unsigned int get_type() {return query_type;};
 private:
 	bool generic_query(const vector<string>& args, outputType type,  string& response,string query,int t);
-  bool generic_query(string & response, string query,unsigned int type);
+  bool generic_query(string & response, string query);
+  unsigned int query_type;
 };
 /* TO DO: Right now the url arguments are used to uniquely determine API correctness
    Change to using the url itself.
@@ -42,18 +45,28 @@ private:
 #define AFORMAT 8
 #define ALAST 16
 #define AMAC 32
-#define VALID_URL_AUTH 64
-#define VALID_URL_CLIENT 128
-#define VALID_URL_AP 256
-#define VALID_URL_COUNT 512
-#define VALID_URL_LIVE 1024
+#define AUSERNAME 64
+#define APASSWORD 128
+#define VALID_ARGS_STD 15
+#define VALID_ARGS_LAST 17
+#define VALID_ARGS_UID 32
+#define VALID_URL_AUTH 256
+#define VALID_URL_CLIENT 512
+#define VALID_URL_AP 1024
+#define VALID_URL_COUNT 2048
+#define VALID_URL_UID 4096
+#define VALID_URL_LIVE 8192 
 #define INVALID_URL 0
-#define INVALID_ARGS 0
-#define VALID_ARGS_LIVE 0
-#define VALID_ARGS_STD 15  // Valid ARGS for "standard" query - come up with better names
-#define VALID_ARGS_LAST 17 // Valid args for "last" n connections query
-#define VALID_ARGS_MAC 32 // Valid args to get the uid form the MAC
-#define VALID_ARGS_COUNT 14 // Valid args count to get no. of connections made to APs
+#define NO_ARGS 0
+#define VALID_API_UID 4128 // API to get UID
+#define VALID_API_AUTH 448
+#define VALID_API_AP_STD 1039
+#define VALID_API_AP_LAST 1041
+#define VALID_API_CLIENT_STD 527
+#define VALID_API_CLIENT_LAST 529
+#define VALID_API_COUNT 2062
+#define VALID_API_LIVE 8192
+
 #define MAX_ENTRIES 1000
 
 struct args_container{
@@ -70,7 +83,7 @@ struct args_container{
       StrUtil::eraseWhiteSpace(uid);
       StrUtil::eraseWhiteSpace(last);
     }
-    else if(type == VALID_ARGS_MAC){
+    else if(type == VALID_ARGS_UID){
       StrUtil::eraseWhiteSpace(mac);
     }
   }
