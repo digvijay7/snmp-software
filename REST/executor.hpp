@@ -26,6 +26,7 @@ public:
   bool last(const args_container & args, outputType type,  string& response,const string & url);
   bool std(const args_container & args, outputType type,  string & response,const string & url);
   bool count(const args_container &args, outputType type, string & response,const string & url);
+  bool live(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
 private:
