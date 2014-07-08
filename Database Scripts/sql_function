@@ -194,7 +194,7 @@ BEGIN
   from_time := to_timestamp($1,$3);
   to_time := to_timestamp($2,$3);
   
-  IF (to_time - from_time) > interval '30 minutes' THEN
+  IF EXTRACT( EPOCH FROM to_time - from_time) > 30  THEN
     to_time := from_time + interval '30 minutes';
   END IF;
 
