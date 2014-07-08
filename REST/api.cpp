@@ -93,6 +93,9 @@ unsigned int url_type(const std::string & url){
   else if(url == "/count"){
     return VALID_URL_COUNT;
   }
+  else if(url == "/uid"){
+    return 1;
+  }
   return INVALID_URL;
 }
 
