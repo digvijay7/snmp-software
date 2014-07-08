@@ -34,7 +34,7 @@ Getting UID from MAC functions
 bool Executor::uid(const args_container &args, outputType type, string & response){
 	std::stringstream ss;
 	ss << "SELECT uid from uid where hash=decode('"<< generatehash(args.mac)<<"','hex');";
-	return Executor::generic_query(response,ss.str(),VALID_ARGS_MAC);
+	return Executor::generic_query(response,ss.str());
 }
 
 bool write_uid(pqxx::result & res,string & response){
@@ -68,7 +68,7 @@ bool Executor::last(const args_container &args, outputType type, string & respon
     ss << " order by fro limit " << args.last <<" ;";
   }
   //std::cout<<"Query:"<<ss.str()<<std::endl;
-  return Executor::generic_query(response,ss.str(),VALID_ARGS_LAST);
+  return Executor::generic_query(response,ss.str());
 }
 
 bool write_last_std(pqxx::result & res, string & response){
@@ -110,7 +110,7 @@ bool Executor::count(const args_container &args, outputType type, string & respo
   ss << "SELECT * FROM all_count('" << args.from <<"','";
   ss << args.to << "','" << args.format<<"');";
   std::cout <<"Making query:" << ss.str() << std::endl;
-  return Executor::generic_query(response,ss.str(),VALID_ARGS_COUNT);
+  return Executor::generic_query(response,ss.str());
 }
 /*
 ************************************************
@@ -132,7 +132,7 @@ bool Executor::std(const args_container &args, outputType type, string & respons
   }
   ss << " order by fro limit "<< MAX_ENTRIES + 1 << ";"; // +1 to check if limit exceeded
   std::cout<<"Making query:"<<ss.str()<<std::endl;
-  return Executor::generic_query(response,ss.str(),VALID_ARGS_STD);
+  return Executor::generic_query(response,ss.str());
 }
 /*
 ************************************************
@@ -160,7 +160,7 @@ bool write_count(pqxx::result & res, std::string & response){
 Function to execute SQL query
 *****************************
 */
-bool Executor::generic_query(string & response, const string query,unsigned int type){
+bool Executor::generic_query(string & response, const string query){
   try{
     pqxx::connection conn("dbname=mydb user=postgres password=admin hostaddr=127.0.0.1 port=5432");
     if(!conn.is_open()){
@@ -170,17 +170,17 @@ bool Executor::generic_query(string & response, const string query,unsigned int 
     pqxx::result res = w.exec(query);
     w.commit();
     //TBD: Maybe some checking on pqxx::result itself
-    if(type == VALID_ARGS_MAC){
+    if(query_type == VALID_API_UID){
       return write_uid(res,response);
     }
-    else if(type == VALID_ARGS_LAST){
-      return write_last_std(res,response); 
+    else if(query_type == VALID_API_COUNT){
+      return write_count(res,response); 
     }
-    else if(type == VALID_ARGS_STD){
-      return write_last_std(res,response); 
+    else if(query_type == VALID_API_LIVE){
+      // write_live() 
     }
-    else if(type == VALID_ARGS_COUNT){
-      return write_count(res,response);
+    else { // Write standard or last
+      return write_last_std(res,response);
     }
   }
   catch(const std::exception & e){

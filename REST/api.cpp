@@ -48,7 +48,7 @@ bool api::authenticateAPI( const map<string, string>& argvals, string& response)
 
 unsigned int fill_args(const map<string,string> & args, struct args_container & params){
   map<string,string>::const_iterator it = args.begin();
-  unsigned int result=INVALID_ARGS;
+  unsigned int result=NO_ARGS;
   while(it!=args.end()){
     if(it->first == "uid"){
       result |= AUID;
@@ -94,11 +94,15 @@ unsigned int url_type(const std::string & url){
     return VALID_URL_COUNT;
   }
   else if(url == "/uid"){
-    return 1;
+    return VALID_URL_UID;
+  }
+  else if(url == "/live"){
+    return VALID_URL_LIVE;
   }
   return INVALID_URL;
 }
 
+  
 bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response){
   // Ignore all the args except the "fields" param 
   Executor::outputType type = Executor::TYPE_JSON;
@@ -109,15 +113,11 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
 	//Old comment -  Unique params will come handy when, in future we allow for multiple MACs to be sent at once.
 	string prms;
   unsigned int args_type = fill_args(argvals,params);
-  if(url_type(url) == INVALID_URL){ // Check URL
+  unsigned int _url_type = url_type(url);
+  unsigned int query_type = args_type | _url_type;
+  _executor.set_type(query_type);
+  if(_url_type == INVALID_URL){ // Check URL
     response = "Invalid API call - invalid URL";
-    return false;
-  }
-  else if(((args_type != VALID_ARGS_STD) ) // Check Args
-     and ((args_type != VALID_ARGS_LAST) )
-     and ((args_type != VALID_ARGS_MAC) )
-     and ((args_type != VALID_ARGS_COUNT) )){
-    response = "Invalid API call - invalid arguments";
     return false;
   }
 
@@ -136,17 +136,22 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
         Executor::outputType type, string& response)
 {
   bool ret = false;
-  if(argvals.type == VALID_ARGS_MAC){
+  if(_executor.get_type() == VALID_API_UID){
     ret = _executor.uid(argvals,type,response);
   }
-  else if(argvals.type == VALID_ARGS_LAST){
+  else if(_executor.get_type() == VALID_API_CLIENT_LAST or
+    _executor.get_type() == VALID_API_AP_LAST){
     ret = _executor.last(argvals,type,response,url); // 'url' checks for '/client' or '/device'
   }
-  else if(argvals.type == VALID_ARGS_STD){
+  else if(_executor.get_type() == VALID_API_CLIENT_STD or
+    _executor.get_type() == VALID_API_AP_STD){
     ret = _executor.std(argvals,type,response,url); // 'std' is used to refer to the standrd from date to to date api
   }
-  else if(argvals.type == VALID_ARGS_COUNT){
+  else if(_executor.get_type() == VALID_API_COUNT){
     ret = _executor.count(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_LIVE){
+    // Add live function
   }
   return ret;
 }
