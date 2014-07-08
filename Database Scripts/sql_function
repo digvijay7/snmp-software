@@ -1,13 +1,3 @@
-CREATE OR REPLACE function get_entries(varchar, varchar, varchar) returns table (device_id int, client_id int,ts timestamp, label varchar, type int) as
-$$
-begin
-create temp table if not exists real_from (id int, ts timestamp);
-delete from real_from;
-insert into real_from (select logs.client_id,max(logs.ts) from logs where logs.ts < to_timestamp($1,$3) and logs.type = 1 group by logs.client_id);
-return query select logs.device_id,logs.client_id,logs.ts,logs.label,logs.type from logs left join real_from on logs.client_id = real_from.id and logs.ts >= real_from.ts and logs.ts <= to_timestamp($2,$3);
-end
-$$
-LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION all_client_std(varchar,varchar,varchar)
 RETURNS TABLE (device_id int,client_id int, fro timestamp, tro timestamp) AS
@@ -57,7 +47,6 @@ CREATE OR REPLACE FUNCTION no_access_device_std(varchar, varchar, varchar,int)
 RETURNS TABLE (device_id int, client_id int, fro timestamp, tro timestamp) AS
 $$
 DECLARE
-  row1 logs.client_id%TYPE;
   from_time timestamp;
   to_time timestamp;
   row2 logs%rowtype;
@@ -72,7 +61,7 @@ BEGIN
 
   CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
 
-  FOR row2 IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type
+  FOR row2.device_id,row2.client_id,row2.ts,row2.label,row2.type IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type
   FROM logs l LEFT JOIN uid u ON (l.client_id = u.uid)
   WHERE id = l.device_id and l.ts >= from_time and l.ts <= to_time
   ORDER BY l.client_id,l.ts 
@@ -127,7 +116,7 @@ BEGIN
 
   CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
 
-  FOR row2 IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type
+  FOR row2.device_id,row2.client_id,row2.ts,row2.label,row2.type IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type
   FROM logs l LEFT JOIN uid u ON (l.client_id = u.uid)
   WHERE id = l.device_id and l.ts >= from_time and l.ts <= to_time and u.access >= 1
   ORDER BY l.client_id,l.ts 
@@ -209,11 +198,12 @@ BEGIN
     -- INSERT INTO count(device_id,batch,count)
     PERFORM * FROM no_access_device_std(in_from,in_to,in_format,d_id);
   END LOOP;
-
-  INSERT INTO count(device_id,batch,count)
-  SELECT t.device_id,u.batch,count(*)
-  FROM tmptable t left join uid u on(t.client_id = u.uid)
-  GROUP BY t.device_id,u.batch;
+  IF EXISTS( SELECT * FROM information_schema.tables where table_name = 'tmptable') THEN
+    INSERT INTO count(device_id,batch,count)
+    SELECT t.device_id,u.batch,count(*)
+    FROM tmptable t left join uid u on(t.client_id = u.uid)
+    GROUP BY t.device_id,u.batch;
+  END IF;
 
   RETURN QUERY SELECT c.device_id,c.batch,c.count from count c;
 END
@@ -246,7 +236,7 @@ BEGIN
 
   CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
   
-  FOR row2 IN SELECT * from logs l
+  FOR row2.device_id,row2.client_id,row2.ts,row2.label,row2.type IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type from logs l
   WHERE id = l.client_id and l.ts >= from_time and l.ts <= to_time
   ORDER BY l.ts 
   LOOP
