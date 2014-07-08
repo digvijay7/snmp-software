@@ -183,7 +183,7 @@ END
 $$
 LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION all_count(varchar,varchar,varchar)
+CREATE OR REPLACE FUNCTION all_count(in_from varchar,in_to varchar,in_format varchar)
 RETURNS TABLE (device_id int, batch varchar, count int) AS
 $$
 DECLARE
@@ -196,6 +196,7 @@ BEGIN
   
   IF (EXTRACT( EPOCH FROM to_time - from_time)/60) > 30  THEN
     to_time := from_time + interval '30 minutes';
+    in_to := to_char(to_time,in_format);
   END IF;
 
   CREATE TEMP TABLE IF NOT EXISTS count (device_id int, batch varchar, count int)
@@ -206,7 +207,7 @@ BEGIN
   ORDER BY l.device_id
   LOOP
     -- INSERT INTO count(device_id,batch,count)
-    PERFORM * FROM no_access_device_std($1,$2,$3,d_id);
+    PERFORM * FROM no_access_device_std(in_from,in_to,in_format,d_id);
   END LOOP;
 
   INSERT INTO count(device_id,batch,count)
