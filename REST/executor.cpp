@@ -62,10 +62,10 @@ bool Executor::last(const args_container &args, outputType type, string & respon
     return false;
   }
   if(atoi(args.last.c_str()) > MAX_ENTRIES){
-    ss << " order by fro limit " << MAX_ENTRIES + 1<<" ;";
+    ss << " order by tro DESC limit " << MAX_ENTRIES + 1<<" ;";
   }
   else {
-    ss << " order by fro limit " << args.last <<" ;";
+    ss << " order by tro DESC limit " << args.last <<" ;";
   }
   //std::cout<<"Query:"<<ss.str()<<std::endl;
   return Executor::generic_query(response,ss.str());
