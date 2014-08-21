@@ -66,41 +66,44 @@ CREATE FUNCTION all_count(in_from character varying, in_to character varying, in
     LANGUAGE plpgsql
     AS $_$
 DECLARE
-  from_time timestamp;
-  to_time timestamp;
-  d_id logs.device_id%TYPE;
+from_time timestamp;
+to_time timestamp;
+d_id logs.device_id%TYPE;
 BEGIN
-  from_time := to_timestamp($1,$3);
-  to_time := to_timestamp($2,$3);
-  
-  IF (EXTRACT( EPOCH FROM to_time - from_time)/60) > 30  THEN
-    to_time := from_time + interval '30 minutes';
-    in_to := to_char(to_time,in_format);
-  END IF;
+from_time := to_timestamp($1,$3);
+to_time := to_timestamp($2,$3);
 
-  CREATE TEMP TABLE IF NOT EXISTS count (device_id int, batch varchar, count int)
-  ON COMMIT DROP;
-
-  FOR d_id IN SELECT DISTINCT l.device_id FROM logs l
-  WHERE l.ts >= from_time and l.ts <= to_time
-  ORDER BY l.device_id
-  LOOP
-    -- INSERT INTO count(device_id,batch,count)
-    PERFORM * FROM no_access_device_std(in_from,in_to,in_format,d_id);
-  END LOOP;
-  IF EXISTS( SELECT * FROM information_schema.tables where table_name = 'tmptable') THEN
-    INSERT INTO count(device_id,batch,count)
-    SELECT t.device_id,u.batch,count(*)
-    FROM tmptable t left join uid u on(t.client_id = u.uid)
-    GROUP BY t.device_id,u.batch;
-  END IF;
-
-  RETURN QUERY SELECT c.device_id,c.batch,c.count from count c;
+IF (EXTRACT( EPOCH FROM to_time - from_time)/60) > 30  THEN
+to_time := from_time + interval '30 minutes';
+in_to := to_char(to_time,in_format);
+END IF;
+RETURN QUERY SELECT A.device_id,B.batch,CAST (count(distinct A.client_id) as INT) FROM logs A inner join uid B on A.client_id = B.uid and A.ts>= from_time and ts< to_time and A.type = 1 GROUP BY A.device_id,B.Batch;
 END
 $_$;
 
 
 ALTER FUNCTION public.all_count(in_from character varying, in_to character varying, in_format character varying) OWNER TO postgres;
+
+--
+-- Name: at_all_count(character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION at_all_count(in_from character varying, in_format character varying) RETURNS TABLE(device_id integer, batch character varying, count integer)
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  from_time timestamp;
+  to_time timestamp;
+  d_id logs.device_id%TYPE;
+BEGIN
+  from_time := to_timestamp($1,$2) - interval '2 hours';
+  to_time := to_timestamp($1,$2);
+  RETURN QUERY SELECT L.device_id,U.batch,CAST(count(*) AS INT) from logs L join uid U on L.client_id = U.uid where (client_id,ts) in (select client_id,max(ts) from logs where ts >= from_time AND ts <= to_time group by client_id) and L.type = 1 group by L.device_id,U.batch;
+END
+$_$;
+
+
+ALTER FUNCTION public.at_all_count(in_from character varying, in_format character varying) OWNER TO postgres;
 
 --
 -- Name: client_last(integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -177,7 +180,7 @@ BEGIN
         prev_row := row2;
       END IF;
     ELSIF row2.type % 2= 0 THEN
-      IF row2.device_id = prev_row.device_id THEN
+      IF (row2.device_id = prev_row.device_id and prev_row.type = 1 )THEN
         INSERT INTO tmptable(device_id,client_id,fro,tro) VALUES
         (prev_row.device_id,id,prev_row.ts,row2.ts);
         flag := 0;
@@ -204,7 +207,7 @@ CREATE FUNCTION del_dead_conn() RETURNS trigger
     AS $$
 BEGIN
 IF (NEW.type =4) THEN
-DELETE FROM live_table WHERE client_id = NEW.client_id;
+DELETE FROM live_table WHERE client_id = 1;
 END IF;
 RETURN NULL;
 END;
@@ -309,7 +312,7 @@ BEGIN
   IF (NEW.type =1) THEN
     FOR res IN SELECT * FROM live_table where live_table.client_id = NEW.client_id LOOP
     foundFlag :=1;
-      IF (NEW.device_id != res.device_id ) THEN
+      IF (NEW.device_id != res.device_id and NEW.ts >= res.ts) THEN
         UPDATE live_table SET device_id = NEW.device_id,ts = NEW.ts where client_id = NEW.client_id;
       END IF;
     END LOOP;
@@ -317,9 +320,9 @@ BEGIN
       INSERT INTO live_table VALUES(NEW.client_id, NEW.device_id, NEW.ts);
     END IF;
   END IF;
-  IF (NEW.type =2) THEN
+  IF (NEW.type %2 = 0) THEN
     FOR res IN SELECT * FROM live_table where live_table.client_id = NEW.client_id LOOP
-      IF(NEW.device_id = res.device_id) THEN
+      IF(NEW.device_id = res.device_id and NEW.ts >= res.ts) THEN
         DELETE FROM live_table where client_id = NEW.client_id;
       END IF;
     END LOOP;
@@ -522,9 +525,50 @@ $_$;
 
 ALTER FUNCTION public.no_access_device_std(character varying, character varying, character varying, integer) OWNER TO postgres;
 
+--
+-- Name: tmp_all_count(character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION tmp_all_count(in_from character varying, in_to character varying, in_format character varying) RETURNS TABLE(device_id integer, batch character varying, count integer)
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+from_time timestamp;
+to_time timestamp;
+d_id logs.device_id%TYPE;
+BEGIN
+from_time := to_timestamp($1,$3);
+to_time := to_timestamp($2,$3);
+
+IF (EXTRACT( EPOCH FROM to_time - from_time)/60) > 30  THEN
+to_time := from_time + interval '30 minutes';
+in_to := to_char(to_time,in_format);
+END IF;
+RETURN QUERY SELECT A.device_id,B.batch,CAST (count(distinct A.client_id) as INT) FROM logs A inner join uid B on A.client_id = B.uid and A.ts>= from_time and ts< to_time and A.type = 1 GROUP BY A.device_id,B.Batch;
+END
+$_$;
+
+
+ALTER FUNCTION public.tmp_all_count(in_from character varying, in_to character varying, in_format character varying) OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
+
+--
+-- Name: label; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE label (
+    uid integer NOT NULL,
+    building character varying DEFAULT ''::character varying,
+    floor character varying DEFAULT ''::character varying,
+    wing character varying DEFAULT ''::character varying,
+    room character varying DEFAULT ''::character varying
+);
+
+
+ALTER TABLE public.label OWNER TO postgres;
 
 --
 -- Name: live_table; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -624,6 +668,14 @@ ALTER TABLE public.users OWNER TO postgres;
 --
 
 ALTER TABLE ONLY uid ALTER COLUMN uid SET DEFAULT nextval('uid_uid_seq'::regclass);
+
+
+--
+-- Name: label_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY label
+    ADD CONSTRAINT label_pkey PRIMARY KEY (uid);
 
 
 --
