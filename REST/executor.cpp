@@ -128,7 +128,7 @@ bool Executor::count_at(const args_container &args, outputType type, string & re
   }
   ss << "SELECT " << ss2.str() << ",sum(count) as count from at_all_count('" << args.at;
   ss << "','"<<args.format<<"') join label on device_id = uid GROUP BY ";
-  ss << ss2.str() << " ORDER BY building;";
+  ss << ss2.str() << " ORDER BY "<<ss2.str()<< ";";
   std::cout << "Making Query:"<<ss.str()<<std::endl;
   return Executor::generic_query(response,ss.str());
 }
