@@ -26,7 +26,8 @@ public:
   bool last(const args_container & args, outputType type,  string& response,const string & url);
   bool std(const args_container & args, outputType type,  string & response,const string & url);
   bool count(const args_container &args, outputType type, string & response,const string & url);
-  bool live(const args_container &args, outputType type, string & response,const string & url);
+  bool count_at(const args_container &args, outputType type, string & response,const string & url);
+ bool live(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
 private:
@@ -47,6 +48,9 @@ private:
 #define AMAC 32
 #define AUSERNAME 64
 #define APASSWORD 128
+#define AAT 16384
+#define ATYPE 32768
+#define VALID_ARGS_AT 49160
 #define VALID_ARGS_STD 15
 #define VALID_ARGS_LAST 17
 #define VALID_ARGS_UID 32
@@ -65,13 +69,37 @@ private:
 #define VALID_API_CLIENT_STD 527
 #define VALID_API_CLIENT_LAST 529
 #define VALID_API_COUNT 2062
+#define VALID_API_COUNT_AT 51208
 #define VALID_API_LIVE 8192
 
 #define MAX_ENTRIES 1000
 
 struct args_container{
   unsigned int type;
-  string uid,from,to,format,last,mac;
+  string uid,from,to,format,last,mac,at;
+  bool building,floor,wing,room;
+  args_container(){
+    building = floor = wing = room = false;
+  }
+  bool set(char c){
+    if(c == 'b'){
+      building = true;
+    }
+    else if(c == 'f'){
+      floor = true;
+    }
+    else if(c == 'w'){
+      wing = true;
+    }
+    else if( c == 'r'){
+      room = true;
+    }
+    else {
+      return false;
+    }
+    return true;
+  }
+
   void erase_whitespace(){
     if(type == VALID_ARGS_STD){
       StrUtil::eraseWhiteSpace(uid);

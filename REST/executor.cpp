@@ -112,6 +112,27 @@ bool Executor::count(const args_container &args, outputType type, string & respo
   std::cout <<"Making query:" << ss.str() << std::endl;
   return Executor::generic_query(response,ss.str());
 }
+bool Executor::count_at(const args_container &args, outputType type, string & response,const string & url){
+  std::stringstream ss,ss2;
+  std::vector<std::string> tmp;
+  if(args.building) tmp.push_back("building");
+  if(args.floor) tmp.push_back("floor");
+  if(args.wing) tmp.push_back("wing");
+  if(args.room) tmp.push_back("room");
+  for(unsigned int i = 0;i<tmp.size();i++){
+    if(i == tmp.size()-1){
+      ss2 << tmp.at(i);
+      continue;
+    }
+    ss2 << tmp.at(i) <<",";
+  }
+  ss << "SELECT " << ss2.str() << ",sum(count) from at_all_count('" << args.at;
+  ss << "','"<<args.format<<"') join label on device_id = uid GROUP BY ";
+  ss << ss2.str() << " ORDER BY building;";
+  std::cout << "Making Query:"<<ss.str()<<std::endl;
+  return Executor::generic_query(response,ss.str());
+}
+
 /*
 ************************************************
 Getting entries between two dates+times function

@@ -74,6 +74,17 @@ unsigned int fill_args(const map<string,string> & args, struct args_container & 
       result |= AMAC;
       params.mac = it->second;
     }
+    else if(it->first == "at"){
+      result |= AAT;
+      params.at = it->second;
+    }
+    else if(it->first == "type"){
+      result |= ATYPE;
+      std::string chars = it->second;
+      for(char &c : chars){
+        params.set(c); // If an invalid character is in the input an error should be thrown back - right now, all unidentified characters are ignored
+      }
+    }
     it++;
   }
   params.type = result;
@@ -146,6 +157,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_CLIENT_STD or
     _executor.get_type() == VALID_API_AP_STD){
     ret = _executor.std(argvals,type,response,url); // 'std' is used to refer to the standrd from date to to date api
+  }
+  else if(_executor.get_type() == VALID_API_COUNT_AT){
+    ret = _executor.count_at(argvals,type,response,url);
   }
   else if(_executor.get_type() == VALID_API_COUNT){
     ret = _executor.count(argvals,type,response,url);
