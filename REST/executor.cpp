@@ -175,6 +175,23 @@ bool write_count(pqxx::result & res, std::string & response){
   response = ss.str();
   return true;
 }
+bool write_count_at(pqxx::result & res, std::string & response){
+  ptree root_t, children;
+  root_t.put("size",res.size());
+  for(size_t i=0;i<res.size();i++){
+    ptree child;
+    for(pqxx::result::tuple::size_type j=0;j<res[i].size();j++){
+      std::string col(res[i][j].name(),strlen((res[i][j]).name()));
+      child.put(col,res[i][j]);
+    }
+    children.push_back(make_pair("",child));
+  }
+  root_t.add_child("occupancy_information",children);
+  std::stringstream ss;
+  write_json(ss,root_t);
+  response = ss.str();
+  return true;
+}
 /*
 ********************************
 Function to get live connections
@@ -230,6 +247,9 @@ bool Executor::generic_query(string & response, const string query){
     }
     else if(query_type == VALID_API_LIVE){
       return write_live(res,response); 
+    }
+    else if(query_type == VALID_API_COUNT){
+      return write_count_at(res,response);
     }
     else { // Write standard or last
       return write_last_std(res,response);
