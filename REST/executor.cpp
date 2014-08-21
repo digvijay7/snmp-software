@@ -248,7 +248,7 @@ bool Executor::generic_query(string & response, const string query){
     else if(query_type == VALID_API_LIVE){
       return write_live(res,response); 
     }
-    else if(query_type == VALID_API_COUNT){
+    else if(query_type == VALID_API_COUNT_AT){
       return write_count_at(res,response);
     }
     else { // Write standard or last
