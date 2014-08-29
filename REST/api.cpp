@@ -46,9 +46,9 @@ bool api::authenticateAPI( const map<string, string>& argvals, string& response)
 }
 
 
-unsigned int fill_args(const map<string,string> & args, struct args_container & params){
+unsigned long fill_args(const map<string,string> & args, struct args_container & params){
   map<string,string>::const_iterator it = args.begin();
-  unsigned int result=NO_ARGS;
+  unsigned long result=NO_ARGS;
   while(it!=args.end()){
     if(it->first == "uid"){
       result |= AUID;
@@ -85,13 +85,21 @@ unsigned int fill_args(const map<string,string> & args, struct args_container & 
         params.set(c); // If an invalid character is in the input an error should be thrown back - right now, all unidentified characters are ignored
       }
     }
+    else if(it->first == "rollno"){
+      result |= AROLLNO;
+      params.rollno = it->second;
+    }
+    else if(it->first == "access"){
+      result |= AACCESS;
+      params.access = std::stoi(it->second);
+    }
     it++;
   }
   params.type = result;
   return result;
 }
 
-unsigned int url_type(const std::string & url){
+unsigned long url_type(const std::string & url){
   if(url == "/auth"){
     return VALID_URL_AUTH;
   }
@@ -110,6 +118,12 @@ unsigned int url_type(const std::string & url){
   else if(url == "/live"){
     return VALID_URL_LIVE;
   }
+  else if(url == "/su/get"){
+    return VALID_URL_SU;
+  }
+  else if(url == "/su/put"){
+    return VALID_URL_SU;
+  }
   return INVALID_URL;
 }
 
@@ -123,9 +137,9 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
 
 	//Old comment -  Unique params will come handy when, in future we allow for multiple MACs to be sent at once.
 	string prms;
-  unsigned int args_type = fill_args(argvals,params);
-  unsigned int _url_type = url_type(url);
-  unsigned int query_type = args_type | _url_type;
+  unsigned long args_type = fill_args(argvals,params);
+  unsigned long _url_type = url_type(url);
+  unsigned long query_type = args_type | _url_type;
   _executor.set_type(query_type);
   if(_url_type == INVALID_URL){ // Check URL
     response = "Invalid API call - invalid URL";
@@ -166,6 +180,12 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   }
   else if(_executor.get_type() == VALID_API_LIVE){
     ret = _executor.live(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_SU_GET){
+    ret = _executor.su_get(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_SU_PUT){
+    ret = _executor.su_put(argvals,type,response,url);
   }
   return ret;
 }
