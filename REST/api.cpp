@@ -11,14 +11,14 @@ api::api()
     set<string> params;
 }
 
-bool api::authenticateAPI( const map<string, string>& argvals, string& response)
+bool api::authenticateAPI( const map<string, string>& argvals, string& response, bool & is_sudo)
 {
   map<string, string>:: const_iterator it,it2;
   std::string recieved_token;
 
   it = argvals.find("token");
   if(it !=argvals.end()){
-  	if( !tokenchecking(it->second) ){
+  	if( !tokenchecking(it->second,is_sudo) ){
 		response="Invalid token";
 		return false;
 	}
@@ -35,13 +35,13 @@ bool api::authenticateAPI( const map<string, string>& argvals, string& response)
 		return false;
 	}
 	else{
-		response=recieved_token;
-		return false;
-	}
+  		response=recieved_token;
+  		return false;
+  	}
   }
   else{
-	response="Invalid API Call";
-	return false;
+  	response="Invalid API Call";
+  	return false;
   }
 }
 
@@ -128,7 +128,7 @@ unsigned long url_type(const std::string & url){
 }
 
   
-bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response){
+bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response,bool & is_sudo){
   // Ignore all the args except the "fields" param 
   Executor::outputType type = Executor::TYPE_JSON;
   args_container params;
@@ -154,11 +154,11 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
         _getInvalidResponse(response);
         return false;
     }*/
-  return _executeAPI(url, params, type, response);
+  return _executeAPI(url, params, type, response,is_sudo);
 }
 
 bool api::_executeAPI(const string& url, const struct args_container & argvals, 
-        Executor::outputType type, string& response)
+        Executor::outputType type, string& response,bool & is_sudo)
 {
   bool ret = false;
   if(_executor.get_type() == VALID_API_UID){
@@ -181,10 +181,10 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_LIVE){
     ret = _executor.live(argvals,type,response,url);
   }
-  else if(_executor.get_type() == VALID_API_SU_GET){
+  else if(_executor.get_type() == VALID_API_SU_GET and is_sudo){
     ret = _executor.su_get(argvals,type,response,url);
   }
-  else if(_executor.get_type() == VALID_API_SU_PUT){
+  else if(_executor.get_type() == VALID_API_SU_PUT and is_sudo){
     ret = _executor.su_put(argvals,type,response,url);
   }
   return ret;

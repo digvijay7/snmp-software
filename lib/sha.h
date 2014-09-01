@@ -29,7 +29,7 @@ std::string sha256(std::string input);
 std::string generatehash(std::string mac);
 std::string hashtoken(std::string inpUser,time_t curr_time); //generates token using the hash logic
 std::string generatetoken(std::string inpUsername,std::string inpPassword); /*Checks database for validity of credentials and generates token by calling hashtoken function*/
-bool tokenchecking(std::string token); /* checks if the token suppied in the URL is a valid token*/
+bool tokenchecking(std::string token,bool & is_sudo); /* checks if the token suppied in the URL is a valid token*/
 
 
 #define SHA2_SHFR(x, n)    (x >> n)

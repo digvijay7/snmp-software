@@ -55,8 +55,16 @@ bool write_su_get(pqxx::result & res, string & response){
   return true;
 }
 bool Executor::su_put(const args_container &args, outputType type, string & response,const string & url){
-    std::string stmt = "SELECT uid,rollno,type,access FROM uid where email = '" + args.rollno + "' or rollno = '" + args.rollno +"' ;";
-      return Executor::generic_query(response,stmt);
+    std::string stmt = "SELECT * FROM update_access( " + args.uid + "," + std::to_string(args.access) + ");";
+    return Executor::generic_query(response,stmt);
+}
+bool write_su_put(pqxx::result & res, string & response){
+  ptree root_t,children;
+  root_t.put("affected rows",res[0][0].as<int>());
+  std::stringstream oss;
+  write_json(oss,root_t);
+  response = oss.str();
+  return true;
 }
 /*
 ******************************
@@ -285,6 +293,9 @@ bool Executor::generic_query(string & response, const string query){
     }
     else if(query_type == VALID_API_SU_GET){
       return write_su_get(res,response);
+    }
+    else if(query_type == VALID_API_SU_PUT){
+      return write_su_put(res,response);
     }
     else { // Write standard or last
       return write_last_std(res,response);

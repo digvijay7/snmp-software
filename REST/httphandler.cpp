@@ -144,11 +144,11 @@ static int url_handler (void *cls,
    if (MHD_get_connection_values (connection, MHD_GET_ARGUMENT_KIND, get_url_args, &url_args) < 0) {
     return send_bad_response(connection, "Error - bad url");
   }
-
-  if(callapi.authenticateAPI(url_args, respdata_auth) == false){
+  bool is_sudo = false;
+  if(callapi.authenticateAPI(url_args, respdata_auth, is_sudo) == false){
       return send_bad_response(connection, respdata_auth);
   }
-  if(callapi.executeAPI(url, url_args, respdata) == false){
+  if(callapi.executeAPI(url, url_args, respdata, is_sudo) == false){
     return send_bad_response(connection, respdata);
   }
   *ptr = 0;                  /* reset when done */
