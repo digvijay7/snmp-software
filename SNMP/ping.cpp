@@ -50,8 +50,11 @@ void *runner(void *param)
     cout << "No Ping Received!"<<endl;
     del_non_reach(record);    
   }
-  else {
-    cout <<  "Ping Received!"<<endl;
+  else if(ping_recv == -1){
+    cout <<  "Somethign went wrong!"<<endl;
+  }
+  else{
+    cout <<"Ping received"<<endl;
   }
     del_non_reach(record);    
   delete record->ip;
@@ -109,7 +112,7 @@ int main(int argc, char** argv)
             pthread_join(threads[l],NULL);
           }               
         }
-        sleep(1);
+        sleep(5);
       }
     }
   }

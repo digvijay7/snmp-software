@@ -95,10 +95,15 @@ int ping(string target)
       perror("socket"); /* probably not running as superuser */
       return -1;
     }
-
+    int _true=1;
+    if(setsockopt(s,SOL_SOCKET,SO_REUSEADDR,&_true,sizeof(int)) == -1 ){
+      perror("setsockopt");
+      return -1;
+    }
     if( (connect(s,(struct sockaddr *) & to, res->ai_addrlen)) < 0)
     {
-      cerr<<"unable to connect";  
+      cerr<<"unable to connect";
+      close(s);
       return -1;  
     }
 
@@ -136,6 +141,7 @@ int ping(string target)
       if (retval == -1)
       {
         perror("select()");
+        close(s);
         return -1;
       }
       else if (retval)
@@ -144,6 +150,7 @@ int ping(string target)
         if ( (ret = recvfrom(s, (char *)packet, packlen, 0,(struct sockaddr *)&from, (socklen_t*)&fromlen)) < 0)
         {
           perror("recvfrom error");
+          close(s);
           return -1;
         }
 
@@ -154,6 +161,7 @@ int ping(string target)
         if (ret < (hlen + ICMP_MINLEN)) 
         { 
           cerr << "packet too short (" << ret  << " bytes) from " << hostname << endl;;
+          close(s);
           return -1; 
         } 
 
@@ -179,16 +187,20 @@ int ping(string target)
         gettimeofday(&end, NULL);
         end_t = 1000000*(end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec);
 
-        if(end_t < 1)
+        if(end_t < 1){
           end_t = 1;
-
-          return end_t;
+        }
+        
+        close(s);
+        return end_t;
       }
       else
       {
+        close(s);
         return 0;
       }
     }
+    close(s);
     return 0;
 }
 
