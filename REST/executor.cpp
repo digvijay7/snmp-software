@@ -32,7 +32,7 @@ and/or accessing sensitive data
 *******************************************************************
 */
 bool Executor::su_get(const args_container &args, outputType type, string & response,const string & url){
-  std::string stmt = "SELECT uid,rollno,type,access FROM uid where email = '" + args.rollno + "' or rollno = '" + args.rollno +"' ;";
+  std::string stmt = "SELECT uid,rollno,type,access FROM uid where lower(email) = lower('" + args.rollno + "') or lower(rollno) = lower('" + args.rollno +"') ;";
   std::cout<<"Making query: "<<stmt<<std::endl;
   return Executor::generic_query(response,stmt);
 }
