@@ -25,7 +25,47 @@ using std::vector;
 Executor::Executor()
 {
 }
+/*
+*******************************************************************
+Sudo functions - Only functions which allow writing to the database
+and/or accessing sensitive data
+*******************************************************************
+*/
+bool Executor::su_get(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT uid,rollno,type,access FROM uid where email = '" + args.rollno + "' or rollno = '" + args.rollno +"' ;";
+  std::cout<<"Making query: "<<stmt<<std::endl;
+  return Executor::generic_query(response,stmt);
+}
 
+bool write_su_get(pqxx::result & res, string & response){
+  ptree root_t,children;
+  root_t.put("size",res.size());
+  if(res.size()>0) root_t.put("rollno",res[0][1]);
+  for(unsigned int i=0;i<res.size();i++){
+    ptree child;
+    child.put("uid",res[i][0]);
+    child.put("device type",res[i][2]);
+    child.put("access",res[i][3]);
+    children.push_back(make_pair("",child));
+  }
+  root_t.add_child("devices",children);
+  std::stringstream oss;
+  write_json(oss,root_t);
+  response = oss.str();
+  return true;
+}
+bool Executor::su_put(const args_container &args, outputType type, string & response,const string & url){
+    std::string stmt = "SELECT * FROM update_access( " + args.uid + "," + std::to_string(args.access) + ");";
+    return Executor::generic_query(response,stmt);
+}
+bool write_su_put(pqxx::result & res, string & response){
+  ptree root_t,children;
+  root_t.put("affected rows",res[0][0].as<int>());
+  std::stringstream oss;
+  write_json(oss,root_t);
+  response = oss.str();
+  return true;
+}
 /*
 ******************************
 Getting UID from MAC functions
@@ -47,7 +87,7 @@ bool write_uid(pqxx::result & res,string & response){
 }
 /*
 *******************************
-Getting last N entries function
+7Getting last N entries function
 *******************************
 */
 bool Executor::last(const args_container &args, outputType type, string & response,const string & url){
@@ -250,6 +290,12 @@ bool Executor::generic_query(string & response, const string query){
     }
     else if(query_type == VALID_API_COUNT_AT){
       return write_count_at(res,response);
+    }
+    else if(query_type == VALID_API_SU_GET){
+      return write_su_get(res,response);
+    }
+    else if(query_type == VALID_API_SU_PUT){
+      return write_su_put(res,response);
     }
     else { // Write standard or last
       return write_last_std(res,response);

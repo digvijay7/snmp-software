@@ -28,6 +28,8 @@ public:
   bool count(const args_container &args, outputType type, string & response,const string & url);
   bool count_at(const args_container &args, outputType type, string & response,const string & url);
  bool live(const args_container &args, outputType type, string & response,const string & url);
+  bool su_get(const args_container &args, outputType type, string & response,const string & url);
+  bool su_put(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
 private:
@@ -50,6 +52,8 @@ private:
 #define APASSWORD 128
 #define AAT 16384
 #define ATYPE 32768
+#define AROLLNO 131072
+#define AACCESS 262144
 #define VALID_ARGS_AT 49160
 #define VALID_ARGS_STD 15
 #define VALID_ARGS_LAST 17
@@ -60,6 +64,7 @@ private:
 #define VALID_URL_COUNT 2048
 #define VALID_URL_UID 4096
 #define VALID_URL_LIVE 8192 
+#define VALID_URL_SU 65536
 #define INVALID_URL 0
 #define NO_ARGS 0
 #define VALID_API_UID 4128 // API to get UID
@@ -71,12 +76,15 @@ private:
 #define VALID_API_COUNT 2062
 #define VALID_API_COUNT_AT 51208
 #define VALID_API_LIVE 8192
+#define VALID_API_SU_GET 196608
+#define VALID_API_SU_PUT 327681
 
 #define MAX_ENTRIES 1000
 
 struct args_container{
-  unsigned int type;
-  string uid,from,to,format,last,mac,at;
+  unsigned long type;
+  int access;
+  string uid,from,to,format,last,mac,at,rollno;
   bool building,floor,wing,room;
   args_container(){
     building = floor = wing = room = false;
