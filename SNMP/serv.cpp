@@ -65,8 +65,9 @@ int main(int argc, char * argv[])
 			make_thread((void *)data);
 			std::stringstream sas;
 			sas<<"Server says hi!\n";
-			std::string *message = new std::string("Server says hi!\n");
-			boost::asio::write(socket,boost::asio::buffer(*message),boost::asio::transfer_all(),error);
+			std::string message = "Server says hi!\n";
+			boost::asio::write(socket,boost::asio::buffer(message),boost::asio::transfer_all(),error);
+      delete data;
 //	  std::cout.write(buf.data(),len);
 //		std::cout.flush();
 	  }
