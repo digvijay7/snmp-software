@@ -59,15 +59,15 @@ int main(int argc, char * argv[])
 				throw boost::system::system_error(error); // Some other error.*/
 			/*pthread_t thread;
 			int rc;*/
-			std::string * data = new std::string(buf.begin(),buf.end());
-			data = new std::string(*data,0,len);
+			std::string data(buf.begin(),buf.end());
+			data = std::string(data,0,len);
 			//rc = pthread_create(&thread,NULL,make_thread,(void *)data);
-			make_thread((void *)data);
+			make_thread((void *)&data);
 			std::stringstream sas;
 			sas<<"Server says hi!\n";
 			std::string message = "Server says hi!\n";
 			boost::asio::write(socket,boost::asio::buffer(message),boost::asio::transfer_all(),error);
-      delete data;
+//      delete data;
 //	  std::cout.write(buf.data(),len);
 //		std::cout.flush();
 	  }
