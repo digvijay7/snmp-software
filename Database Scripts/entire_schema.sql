@@ -418,6 +418,25 @@ If MAC not present, then call insert_uid and return the uid assigned.';
 
 
 --
+-- Name: heavy(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION heavy() RETURNS TABLE(a integer, b integer, c timestamp without time zone, d timestamp without time zone)
+    LANGUAGE plpgsql
+    AS $$
+declare
+v int;
+begin
+for v in select distinct uid from label limit 10 loop 
+return query select * from no_access_device_std('2014-09-05 00:00:00','2014-09-06 00:00:00','yyyy-mm-dd hh24:mi:ss',v);
+end loop;
+end
+$$;
+
+
+ALTER FUNCTION public.heavy() OWNER TO postgres;
+
+--
 -- Name: insert_uid(character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -551,6 +570,86 @@ $_$;
 
 ALTER FUNCTION public.tmp_all_count(in_from character varying, in_to character varying, in_format character varying) OWNER TO postgres;
 
+--
+-- Name: try(character varying, character varying, character varying, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION try(character varying, character varying, character varying, integer) RETURNS TABLE(device_id integer, client_id integer, fro timestamp without time zone, tro timestamp without time zone)
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  from_time timestamp;
+  to_time timestamp;
+  row2 logs%rowtype;
+  prev_row logs%rowtype;
+  id logs.device_id%TYPE;
+  flag int;
+BEGIN
+  from_time := to_timestamp($1,$3);
+  to_time := to_timestamp($2,$3);
+  id := $4;
+  flag := 0;
+
+  CREATE TEMP TABLE IF NOT EXISTS tmptable ( device_id int, client_id int, fro timestamp, tro timestamp ) ON COMMIT DROP;
+
+  FOR row2.device_id,row2.client_id,row2.ts,row2.label,row2.type IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type
+  FROM logs l LEFT JOIN uid u ON (l.client_id = u.uid)
+  WHERE id = l.device_id and l.ts >= from_time and l.ts <= to_time
+  ORDER BY l.client_id,l.ts 
+  LOOP
+    IF flag = 0 THEN
+      flag := 1;
+      prev_row := row2;
+    END IF;
+    IF prev_row.client_id != row2.client_id THEN
+      INSERT INTO tmptable(device_id,client_id,fro) VALUES
+      (id,prev_row.client_id,prev_row.ts);
+      prev_row := row2;
+    END IF;
+
+    IF row2.type = 1 and prev_row.type % 2 = 0 THEN
+      prev_row := row2;
+    ELSIF row2.type % 2 = 0 and prev_row.type = 1 THEN
+      INSERT INTO tmptable(device_id,client_id,fro,tro)
+      VALUES (id,prev_row.client_id,prev_row.ts,row2.ts);
+      flag := 0;
+    ELSE
+      -- Do nothing
+      NULL;
+    END IF;
+  END LOOP;
+  IF prev_row.type = 1 and flag = 1 THEN
+    INSERT INTO tmptable(device_id,client_id,fro) VALUES
+    (id,prev_row.client_id,prev_row.ts);
+  END IF;
+  RETURN QUERY SELECT t.device_id,t.client_id,t.fro,t.tro from tmptable t;
+END
+$_$;
+
+
+ALTER FUNCTION public.try(character varying, character varying, character varying, integer) OWNER TO postgres;
+
+--
+-- Name: update_access(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION update_access(integer, integer) RETURNS integer
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+rcount int;
+BEGIN
+IF $2 < 2 and $2 >=0 THEN
+UPDATE uid SET access = $2 where uid = $1;
+END IF;
+GET DIAGNOSTICS rcount := ROW_COUNT;
+RETURN rcount;
+END;
+$_$;
+
+
+ALTER FUNCTION public.update_access(integer, integer) OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -657,7 +756,8 @@ ALTER SEQUENCE uid_uid_seq OWNED BY uid.uid;
 
 CREATE TABLE users (
     username text NOT NULL,
-    password bytea NOT NULL
+    password bytea NOT NULL,
+    su integer DEFAULT 0
 );
 
 
