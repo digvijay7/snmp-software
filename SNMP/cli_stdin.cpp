@@ -18,6 +18,7 @@
 #include <vector>
 #include <ctime>
 #include <csignal>
+#include<algorithm>
 
 using boost::asio::ip::tcp;
 
@@ -52,9 +53,23 @@ class info{
 		return ss.str();
 	};
 };
+std::vector<std::string> & split(const std::string &s, char delim, std::vector<std::string> &elems) {
+  std::stringstream ss(s);
+  std::string item;
+  while (std::getline(ss, item, delim)) {
+    elems.push_back(item);
+  }
+  return elems;
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+  std::vector<std::string> elems;
+  split(s, delim, elems);
+  return elems;
+}
 
 void put_log(std::ofstream & out, std::string text){
-	using namespace std;
+/*	using namespace std;
 	time_t t = time(0);
 	struct tm * now = localtime( & t );
 	std::cout << (now->tm_year + 1900) << '-' 
@@ -64,7 +79,7 @@ void put_log(std::ofstream & out, std::string text){
 		<< now->tm_min << ':'
 		<< now->tm_sec
 		<< endl;
-	std::cout <<text<<std::endl;
+	std::cout <<text<<std::endl;*/
 }
 
 void put_log(std::ofstream & out, std::string text,long int number){
@@ -94,18 +109,21 @@ int addTrapType(std::string type){
 //		(*log).push_back("3");
 		ra=3;
 	}
+  else if(type.compare("CISCO-LWAPP-DOT11-CLIENT-MIB::ciscoLwappDot11ClientDisassocDataStatsTrap")==0){
+    ra=4;
+  }
 	else{
 //		(*log).push_back("0");
 		ra=0;
 	}
-	return ra;
+  return ra;
 }
 
 int information(int trap, std::string info){
 	std::stringstream ss(info);
 	int ra;
 	ss>>info;
-	if(trap!=3){
+	if(trap==1 or trap==2){
 		if(info.compare("AIRESPACE-WIRELESS-MIB::bsnAPName.0")==0){
 			ra = 3;
 		}
@@ -121,7 +139,7 @@ int information(int trap, std::string info){
 		else
 			ra = -1;
 	}
-	else{
+	else if(trap==3){
 		if(info.compare("CISCO-LWAPP-AP-MIB::cLApName.0")==0){
 			ra = 3;
 		}
@@ -137,12 +155,27 @@ int information(int trap, std::string info){
 		else
 			ra = -1;
 	}
-
+  else if(trap==4){
+    if(info.compare(0,46,"CISCO-LWAPP-DOT11-CLIENT-MIB::cldcApMacAddress")==0){
+      ra = 1;
+    }
+    else if(info.compare(0,49,"CISCO-LWAPP-DOT11-CLIENT-MIB::cldcClientSessionID")==0){
+      ra = 2;
+    }
+    else if(info.compare("--------------")==0){
+      ra = 0;
+    }
+/*    else if(info.compare(0,28,"CISCO-LWAPP-AP-MIB::cLApName")==0){
+      ra = 3;
+    }*/
+    else
+      ra = -1;
+  }
 	return ra;
 }
 
 info parse(std::vector<std::string> * log, bool getseperator,std::ofstream & out){
-	std::string buffer,first="";
+	std::string buffer,first="",buffer2;
 	info inf;
   int i,trap,seen;
 	try{
@@ -167,6 +200,9 @@ info parse(std::vector<std::string> * log, bool getseperator,std::ofstream & out
             getseperator = true;
     				continue;
     			}
+          else if(trap == 4){
+            std::cout<<"Trap 4"<<std::endl;
+          }
     			while(seen!=3){
     				getline(std::cin,buffer);
     				int type = information(trap,buffer);
@@ -177,12 +213,16 @@ info parse(std::vector<std::string> * log, bool getseperator,std::ofstream & out
     				else if(type==-1) continue;
     				else{
     					std::stringstream tempss(buffer);
-    					tempss >> buffer;tempss>>buffer;tempss>>buffer;tempss>>buffer;
-    					if(type == 1) {inf.setDevice(buffer);std::cout<<"Setting Device = "<<buffer<<std::endl;}
-    					else if(type == 2) inf.setClient(buffer);
-    					else if(type == 3) inf.setLabel(buffer);
+              std::vector<std::string> elems = split(buffer,' ');
+              if(elems.size()>=4){
+    					tempss >> buffer;tempss>>buffer;tempss>>buffer;tempss>>buffer;if(type == 3 and trap==4)tempss>>buffer2;
+    					if(type == 1) {inf.setDevice(buffer);/*std::cout<<"Setting Device = "<<buffer<<std::endl;*/}
+    					else if(type == 2 && trap !=4 ) inf.setClient(buffer);
+              else if(type == 2 && trap ==4){std::vector<std::string> elems = split(buffer,'/');inf.setClient(elems[1]);}
+    					else if(type == 3 && trap!=4) inf.setLabel(buffer);
+              else if(type ==3 && trap ==4) inf.setLabel(buffer2);
     					seen++;
-    					if(seen==3) inf.setOk(true);
+    					if(seen==3) inf.setOk(true);}
     				}
     			}
     			break;
@@ -211,20 +251,21 @@ int main(int argc, char* argv[])
 {
 	//For Logging
 	// --
-	if (argc != 3)
+/*	if (argc != 3)
   {
     std::cerr << "Usage: client <host> <port>" << std::endl;
     return 1;
-  }
+  }*/
   signal(SIGTERM,handle_term);
-  std::stringstream tss;
+/*  std::stringstream tss;
 	tss << "/home/iiitd/cli_stdin" <<argv[2]<<".log";
 	std::cout<<"Trying to open \""<<tss.str()<<"\" log file"<<std::endl;
-	std::ofstream out (tss.str().c_str(),std::ofstream::out);
+	std::ofstream out (tss.str().c_str(),std::ofstream::out);*/
 	//
+  std::ofstream out("test_cli_stdin.log",std::ofstream::out);
 	try
 	{
-		boost::asio::io_service io_service;
+/*		boost::asio::io_service io_service;
 
 		tcp::resolver resolver(io_service);
 		tcp::resolver::query query(argv[1], argv[2]);
@@ -243,7 +284,7 @@ int main(int argc, char* argv[])
 		}
 //		std::ifstream in ("/home/digvijay/temp.txt",std::ifstream::in);
 //		std::ifstream in ("/media/digvijay/44E6C1E0E6C1D27A/snmptraps.log",std::ifstream::in);
-//		std::fstream file("/home/digvijay/Desktop/count.txt");
+//		std::fstream file("/home/digvijay/Desktop/count.txt");*/
     bool setseperator=true;
 		while(shouldNotExit)
 		{
@@ -251,7 +292,7 @@ int main(int argc, char* argv[])
 			boost::system::error_code error;
 			std::vector<std::string> log;
 			put_log(out,"Going to parse.");
-      info inf = parse(&log,setseperator,out); //atol(line.c_str())
+      info inf = parse(&log,true,out); //atol(line.c_str())
 			put_log(out,"Back from parsing.");
 			if(inf.getOk()){
         setseperator = false;
@@ -264,12 +305,16 @@ int main(int argc, char* argv[])
           setseperator = true;
 				}
 			}
-			std::string buf(inf.getData());
+/*			std::string buf(inf.getData());
 			put_log(out,"Sending to server.");
 			put_log(out,inf.getData());
 			boost::asio::write(socket,boost::asio::buffer(buf),boost::asio::transfer_all(),error);
 			boost::array<char, 2048> stemp;
-			size_t len = socket.read_some(boost::asio::buffer(stemp),error);
+			size_t len = socket.read_some(boost::asio::buffer(stemp),error);*/
+      if(inf.getTrap() == 4)
+      std::cout<<inf.getData();
+      else
+        std::cout<<"Got some other trap\n";
     }
   }
   catch (std::exception& e){
