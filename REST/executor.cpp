@@ -124,7 +124,7 @@ bool write_attendance_all(pqxx::result & res,string & response){
   ptree root_t,children;
   for(unsigned int row_num =0;row_num<res.size();row_num++){
     ptree child;
-    child.put("email",res[row_num][0]);
+    child.put("rollno",res[row_num][0]);
     child.put("date",res[row_num][1]);
     children.push_back(make_pair("",child));
   }
