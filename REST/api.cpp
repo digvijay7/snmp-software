@@ -85,6 +85,10 @@ unsigned long fill_args(const map<string,string> & args, struct args_container &
         params.set(c); // If an invalid character is in the input an error should be thrown back - right now, all unidentified characters are ignored
       }
     }
+    else if(it->first == "email"){
+      result |= AEMAIL;
+      params.email= it->second;
+    }
     else if(it->first == "rollno"){
       result |= AROLLNO;
       params.rollno = it->second;
@@ -123,6 +127,9 @@ unsigned long url_type(const std::string & url){
   }
   else if(url == "/su/put"){
     return VALID_URL_SU;
+  }
+  else if(url == "/attendance"){
+    return VALID_URL_ATTENDANCE;
   }
   return INVALID_URL;
 }
@@ -186,6 +193,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   }
   else if(_executor.get_type() == VALID_API_SU_PUT and is_sudo){
     ret = _executor.su_put(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_ATTENDANCE){
+    ret = _executor.attendance(argvals,type,response,url);
   }
   return ret;
 }

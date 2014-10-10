@@ -30,6 +30,7 @@ public:
  bool live(const args_container &args, outputType type, string & response,const string & url);
   bool su_get(const args_container &args, outputType type, string & response,const string & url);
   bool su_put(const args_container &args, outputType type, string & response,const string & url);
+  bool attendance(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
 private:
@@ -54,6 +55,7 @@ private:
 #define ATYPE 32768
 #define AROLLNO 131072
 #define AACCESS 262144
+#define AEMAIL 524288
 #define VALID_ARGS_AT 49160
 #define VALID_ARGS_STD 15
 #define VALID_ARGS_LAST 17
@@ -65,6 +67,7 @@ private:
 #define VALID_URL_UID 4096
 #define VALID_URL_LIVE 8192 
 #define VALID_URL_SU 65536
+#define VALID_URL_ATTENDANCE 1048576
 #define INVALID_URL 0
 #define NO_ARGS 0
 #define VALID_API_UID 4128 // API to get UID
@@ -78,13 +81,13 @@ private:
 #define VALID_API_LIVE 8192
 #define VALID_API_SU_GET 196608
 #define VALID_API_SU_PUT 327681
-
+#define VALID_API_ATTENDANCE 1572878
 #define MAX_ENTRIES 1000
 
 struct args_container{
   unsigned long type;
   int access;
-  string uid,from,to,format,last,mac,at,rollno;
+  string uid,from,to,format,last,mac,at,rollno,email;
   bool building,floor,wing,room;
   args_container(){
     building = floor = wing = room = false;

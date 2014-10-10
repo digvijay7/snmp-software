@@ -86,8 +86,34 @@ bool write_uid(pqxx::result & res,string & response){
   return true;
 }
 /*
+******************************
+Attendance
+******************************
+*/
+bool Executor::attendance(const args_container &args, outputType type, string & response,const string & url){
+	std::stringstream ss;
+	ss << "SELECT * FROM attendance('" << args.email<<"','";
+  ss << args.from <<"','"<<args.to<<"','";
+  ss << args.format <<"');";
+	return Executor::generic_query(response,ss.str());
+}
+
+bool write_attendance(pqxx::result & res,string & response){
+  ptree root_t,children;
+  for(unsigned int row_num =0;row_num<res.size();row_num++){
+    ptree child;
+    child.put("date",res[row_num][0]);
+    children.push_back(make_pair("",child));
+  }
+  root_t.add_child("attendance",children);
+  std::ostringstream oss;
+  write_json(oss,root_t);
+  response = oss.str();
+  return true;
+}
+/*
 *******************************
-7Getting last N entries function
+Getting last N entries function
 *******************************
 */
 bool Executor::last(const args_container &args, outputType type, string & response,const string & url){
@@ -296,6 +322,9 @@ bool Executor::generic_query(string & response, const string query){
     }
     else if(query_type == VALID_API_SU_PUT){
       return write_su_put(res,response);
+    }
+    else if(query_type == VALID_API_ATTENDANCE){
+      return write_attendance(res,response);
     }
     else { // Write standard or last
       return write_last_std(res,response);
