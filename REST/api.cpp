@@ -197,6 +197,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_ATTENDANCE){
     ret = _executor.attendance(argvals,type,response,url);
   }
+  else if(_executor.get_type() == VALID_API_ATTENDANCE_ALL){
+    ret = _executor.attendance_all(argvals,type,response,url);
+  }
   return ret;
 }
 

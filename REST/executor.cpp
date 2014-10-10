@@ -111,6 +111,30 @@ bool write_attendance(pqxx::result & res,string & response){
   response = oss.str();
   return true;
 }
+
+bool Executor::attendance_all(const args_container &args, outputType type, string & response,const string & url){
+  std::stringstream ss;
+  ss << "SELECT * FROM all_attendance('";
+  ss << args.from <<"','"<<args.to<<"','";
+  ss << args.format <<"');";
+  return Executor::generic_query(response,ss.str());
+}
+
+bool write_attendance_all(pqxx::result & res,string & response){
+  ptree root_t,children;
+  for(unsigned int row_num =0;row_num<res.size();row_num++){
+    ptree child;
+    child.put("email",res[row_num][0]);
+    child.put("date",res[row_num][1]);
+    children.push_back(make_pair("",child));
+  }
+  root_t.add_child("attendance",children);
+  std::ostringstream oss;
+  write_json(oss,root_t);
+  response = oss.str();
+  return true;
+}
+
 /*
 *******************************
 Getting last N entries function
@@ -325,6 +349,9 @@ bool Executor::generic_query(string & response, const string query){
     }
     else if(query_type == VALID_API_ATTENDANCE){
       return write_attendance(res,response);
+    }
+    else if(query_type == VALID_API_ATTENDANCE_ALL){
+      return write_attendance_all(res,response);
     }
     else { // Write standard or last
       return write_last_std(res,response);

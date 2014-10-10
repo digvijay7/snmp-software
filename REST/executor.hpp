@@ -31,6 +31,7 @@ public:
   bool su_get(const args_container &args, outputType type, string & response,const string & url);
   bool su_put(const args_container &args, outputType type, string & response,const string & url);
   bool attendance(const args_container &args, outputType type, string & response,const string & url);
+  bool attendance_all(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
 private:
@@ -82,6 +83,7 @@ private:
 #define VALID_API_SU_GET 196608
 #define VALID_API_SU_PUT 327681
 #define VALID_API_ATTENDANCE 1572878
+#define VALID_API_ATTENDANCE_ALL 1048590
 #define MAX_ENTRIES 1000
 
 struct args_container{
