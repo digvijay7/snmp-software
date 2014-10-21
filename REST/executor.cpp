@@ -315,6 +315,22 @@ bool write_live(pqxx::result & res, std::string & response){
   return true;
 }
 /*
+************************************************************
+Function to Register and Deregister for the Location Service
+************************************************************
+*/
+
+bool Executor::loc_register(const args_container &args, outputType type, string & response,const string & url){
+  std::stringstream ss;
+  ss << "INSERT INTO location_service VALUES (" << args.uid << ", now(),'" << args.appid <<"'); ";
+  return Executor::generic_query(response,ss.str());
+}
+bool Executor::loc_deregister(const args_container &args, outputType type, string & response,const string & url){
+  std::stringstream ss;
+  ss<< "DELETE FROM location_service WHERE uid = " << args.uid << ";";
+  return Executor::generic_query(response,ss.str());
+}
+/*
 *****************************
 Function to execute SQL query
 *****************************
