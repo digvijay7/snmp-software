@@ -309,3 +309,38 @@ $trigger_live_logs$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_live_logs AFTER INSERT ON logs FOR EACH ROW EXECUTE PROCEDURE function_live_logs();
 
+CREATE OR REPLACE FUNCTION service_insert() RETURNS trigger AS $notify_service_insert$
+DECLARE
+  found_uid integer;
+   label_row label%rowtype;
+  _building varchar := '';
+  _floor varchar := '';
+  _room varchar := '';
+  _wing varchar := '';
+  _regId location_service%rowtype;
+BEGIN
+  SELECT count(*) INTO found_uid FROM location_service WHERE (NEW.client_id = location_service.uid) AND NEW.type=1;
+  IF (found_uid = 1) THEN
+	SELECT * INTO _regId FROM location_service WHERE NEW.client_id = location_service.uid;
+	FOR label_row.building, label_row.floor, label_row.wing, label_row.room IN SELECT building, floor, wing, room FROM label where 
+	NEW.device_id = label.uid LOOP
+		IF (label_row.building IS NOT NULL) THEN
+			_building = label_row.building;
+        	END IF;
+		IF (label_row.floor IS NOT NULL) THEN
+			_floor = label_row.floor;
+        	END IF;
+		IF (label_row.wing IS NOT NULL) THEN
+			_wing = label_row.wing;
+        	END IF;
+		IF (label_row.room IS NOT NULL) THEN
+			_room = label_row.room;
+        	END IF;
+	END LOOP;
+	PERFORM pg_notify('channel_service_insert', '{"data":' || '{"uid":' || NEW.client_id || ',"time":"' || NEW.ts || '","ap_id":'|| NEW.device_id || ',"label":"'|| NEW.label || '","building":"'|| _building || '","floor":"' || _floor || '","wing":"' || _wing || '","room":"' || _room || '"},"registration_ids":["' || _regId.gcm_appid || '"]}');
+  END IF;
+  RETURN NEW;
+END;
+$notify_service_insert$ LANGUAGE plpgsql;
+
+CREATE TRIGGER notify_service_insert AFTER INSERT ON logs FOR EACH ROW EXECUTE PROCEDURE service_insert();
