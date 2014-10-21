@@ -96,7 +96,7 @@ private:
 struct args_container{
   unsigned long type;
   int access;
-  string uid,from,to,format,last,mac,at,rollno,email,appid;
+  string uid,from,to,format,last,mac,at,rollno,email;
   bool building,floor,wing,room;
   args_container(){
     building = floor = wing = room = false;
