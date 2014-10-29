@@ -95,7 +95,7 @@ bool Executor::attendance(const args_container &args, outputType type, string & 
 	ss << "SELECT * FROM attendance('" << args.email<<"','";
   ss << args.from <<"','"<<args.to<<"','";
   ss << args.format <<"');";
-  std::cout<<"Making query: "<<stmt<<std::endl;
+  std::cout<<"Making query: "<<ss.str()<<std::endl;
 	return Executor::generic_query(response,ss.str());
 }
 
