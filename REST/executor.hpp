@@ -27,11 +27,13 @@ public:
   bool std(const args_container & args, outputType type,  string & response,const string & url);
   bool count(const args_container &args, outputType type, string & response,const string & url);
   bool count_at(const args_container &args, outputType type, string & response,const string & url);
- bool live(const args_container &args, outputType type, string & response,const string & url);
+  bool live(const args_container &args, outputType type, string & response,const string & url);
   bool su_get(const args_container &args, outputType type, string & response,const string & url);
   bool su_put(const args_container &args, outputType type, string & response,const string & url);
   bool attendance(const args_container &args, outputType type, string & response,const string & url);
-  bool attendance_all(const args_container &args, outputType type, string & response,const string & url);
+  bool attendance_all(const args_container &args, outputType type, string & response,const string & url);	
+  bool loc_register(const args_container &args, outputType type, string & response,const string & url);
+  bool loc_deregister(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
 private:
@@ -57,6 +59,7 @@ private:
 #define AROLLNO 131072
 #define AACCESS 262144
 #define AEMAIL 524288
+#define AAPPID 2097152
 #define VALID_ARGS_AT 49160
 #define VALID_ARGS_STD 15
 #define VALID_ARGS_LAST 17
@@ -69,6 +72,8 @@ private:
 #define VALID_URL_LIVE 8192 
 #define VALID_URL_SU 65536
 #define VALID_URL_ATTENDANCE 1048576
+#define VALID_URL_REGISTER 4194304
+#define VALID_URL_DEREGISTER 8388608 
 #define INVALID_URL 0
 #define NO_ARGS 0
 #define VALID_API_UID 4128 // API to get UID
@@ -84,12 +89,14 @@ private:
 #define VALID_API_SU_PUT 327681
 #define VALID_API_ATTENDANCE 1572878
 #define VALID_API_ATTENDANCE_ALL 1048590
+#define VALID_API_REGISTER 6291457
+#define VALID_API_DEREGISTER 8388609
 #define MAX_ENTRIES 1000
 
 struct args_container{
   unsigned long type;
   int access;
-  string uid,from,to,format,last,mac,at,rollno,email;
+  string uid,from,to,format,last,mac,at,rollno,email,appid;
   bool building,floor,wing,room;
   args_container(){
     building = floor = wing = room = false;

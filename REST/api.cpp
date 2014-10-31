@@ -97,6 +97,10 @@ unsigned long fill_args(const map<string,string> & args, struct args_container &
       result |= AACCESS;
       params.access = std::stoi(it->second);
     }
+    else if(it->first == "appid"){
+      result |= AAPPID;
+      params.appid = it->second;
+    }
     it++;
   }
   params.type = result;
@@ -130,6 +134,12 @@ unsigned long url_type(const std::string & url){
   }
   else if(url == "/attendance"){
     return VALID_URL_ATTENDANCE;
+  }
+  else if(url == "/register"){
+    return VALID_URL_REGISTER;
+  }
+  else if(url == "/deregister"){
+    return VALID_URL_DEREGISTER;
   }
   return INVALID_URL;
 }
@@ -199,6 +209,12 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   }
   else if(_executor.get_type() == VALID_API_ATTENDANCE_ALL){
     ret = _executor.attendance_all(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_REGISTER){
+    ret = _executor.loc_register(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_DEREGISTER){
+    ret = _executor.loc_deregister(argvals,type,response,url);
   }
   return ret;
 }
