@@ -96,7 +96,7 @@ void put_log(std::ofstream & out, std::string text,long int number){
 	std::cout <<text<<" "<<number<<std::endl;
 }
 int addTrapType(std::string type){
-	int ra =0;
+	int ra =-1;
 	if(type=="AIRESPACE-WIRELESS-MIB::bsnDot11StationAssociate"){
 //		(*log).push_back("1");
 		ra=1;
@@ -112,7 +112,7 @@ int addTrapType(std::string type){
   else if(type.compare("CISCO-LWAPP-DOT11-CLIENT-MIB::ciscoLwappDot11ClientDisassocDataStatsTrap")==0){
     ra=4;
   }
-	else{
+	else if(type.compare("--------------")==0){
 //		(*log).push_back("0");
 		ra=0;
 	}
@@ -165,9 +165,9 @@ int information(int trap, std::string info){
     else if(info.compare("--------------")==0){
       ra = 0;
     }
-/*    else if(info.compare(0,28,"CISCO-LWAPP-AP-MIB::cLApName")==0){
+    else if(info.compare(0,28,"CISCO-LWAPP-AP-MIB::cLApName")==0){
       ra = 3;
-    }*/
+    }
     else
       ra = -1;
   }
@@ -182,29 +182,34 @@ info parse(std::vector<std::string> * log, bool getseperator,std::ofstream & out
     while(1){
       if(getseperator){
         std::getline(std::cin,buffer);
+        //std::cout<<buffer<<std::endl;
         std::istringstream iss(buffer);
         iss>>first;
       }
   		int i=0,trap=0,seen=0;
   		if(getseperator == false or first.compare("--------------")==0){
   		  i=0;trap=0;seen=0;
-    		for(;i<3;i++){getline(std::cin,buffer);}
+    		for(;i<3;i++){getline(std::cin,buffer);/*std::cout<<buffer<<std::endl;*/}
     			//(*log).push_back(buffer); // DATE TIME
     		inf.setDate(buffer);
-    		for(i=0;i<9;i++){getline(std::cin,buffer);}
+    		for(i=0;i<9;i++){getline(std::cin,buffer);/*std::cout<<buffer<<std::endl;*/}
     			std::istringstream iss2(buffer);
     			for(i=0;i<4;i++)iss2>>buffer;
     			trap = addTrapType(buffer);
     			inf.setTrap(trap);
     			if(trap==0){
-            getseperator = true;
+            getseperator = false;
+            /*std::cout<<"Continuing reading, encountered ----\n";*/
     				continue;
     			}
-          else if(trap == 4){
-            std::cout<<"Trap 4"<<std::endl;
+          else if(trap==-1){
+            getseperator = true;
+            /*std::cout<<"Continuing reading, encountered a trap type we dont want.\n";*/
+            continue;
           }
     			while(seen!=3){
     				getline(std::cin,buffer);
+            //std::cout<<buffer<<std::endl;
     				int type = information(trap,buffer);
     				if(type==0){
     					put_log(out,"Encountered a --------------. Breaking and setting Ok to false.");
@@ -215,12 +220,12 @@ info parse(std::vector<std::string> * log, bool getseperator,std::ofstream & out
     					std::stringstream tempss(buffer);
               std::vector<std::string> elems = split(buffer,' ');
               if(elems.size()>=4){
-    					tempss >> buffer;tempss>>buffer;tempss>>buffer;tempss>>buffer;if(type == 3 and trap==4)tempss>>buffer2;
-    					if(type == 1) {inf.setDevice(buffer);/*std::cout<<"Setting Device = "<<buffer<<std::endl;*/}
-    					else if(type == 2 && trap !=4 ) inf.setClient(buffer);
-              else if(type == 2 && trap ==4){std::vector<std::string> elems = split(buffer,'/');inf.setClient(elems[1]);}
-    					else if(type == 3 && trap!=4) inf.setLabel(buffer);
-              else if(type ==3 && trap ==4) inf.setLabel(buffer2);
+              std::string last_element = elems[elems.size()-1];
+    					if(type == 1) {inf.setDevice(last_element);/*std::cout<<"Setting Device = "<<buffer<<std::endl;*/}
+    					else if(type == 2 && trap !=4 ) inf.setClient(last_element);
+              else if(type == 2 && trap ==4){std::vector<std::string> elems2 = split(last_element,'/');inf.setClient(elems2[1]);}
+    					else if(type == 3 && trap!=4) inf.setLabel(last_element);
+              else if(type ==3 && trap ==4) inf.setLabel(last_element);
     					seen++;
     					if(seen==3) inf.setOk(true);}
     				}
@@ -251,21 +256,20 @@ int main(int argc, char* argv[])
 {
 	//For Logging
 	// --
-/*	if (argc != 3)
+	if (argc != 3)
   {
     std::cerr << "Usage: client <host> <port>" << std::endl;
     return 1;
-  }*/
+  }
   signal(SIGTERM,handle_term);
-/*  std::stringstream tss;
+  std::stringstream tss;
 	tss << "/home/iiitd/cli_stdin" <<argv[2]<<".log";
 	std::cout<<"Trying to open \""<<tss.str()<<"\" log file"<<std::endl;
-	std::ofstream out (tss.str().c_str(),std::ofstream::out);*/
+	std::ofstream out (tss.str().c_str(),std::ofstream::out);
 	//
-  std::ofstream out("test_cli_stdin.log",std::ofstream::out);
 	try
 	{
-/*		boost::asio::io_service io_service;
+		boost::asio::io_service io_service;
 
 		tcp::resolver resolver(io_service);
 		tcp::resolver::query query(argv[1], argv[2]);
@@ -295,26 +299,19 @@ int main(int argc, char* argv[])
       info inf = parse(&log,true,out); //atol(line.c_str())
 			put_log(out,"Back from parsing.");
 			if(inf.getOk()){
-        setseperator = false;
+        setseperator = true;
 			}
 			else{
-				if(inf.getLineCount()==0){
-          setseperator = false;
-        }
-				else{
-          setseperator = true;
-				}
+        setseperator = false;
+        //std::cout<<"Encountered ---- setting setseperator false\n";
+        continue;
 			}
-/*			std::string buf(inf.getData());
+			std::string buf(inf.getData());
 			put_log(out,"Sending to server.");
 			put_log(out,inf.getData());
 			boost::asio::write(socket,boost::asio::buffer(buf),boost::asio::transfer_all(),error);
 			boost::array<char, 2048> stemp;
-			size_t len = socket.read_some(boost::asio::buffer(stemp),error);*/
-      if(inf.getTrap() == 4)
-      std::cout<<inf.getData();
-      else
-        std::cout<<"Got some other trap\n";
+			size_t len = socket.read_some(boost::asio::buffer(stemp),error);
     }
   }
   catch (std::exception& e){
