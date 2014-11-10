@@ -33,7 +33,7 @@ void send_push_message(std::string mytree)
   const char *url = "https://android.googleapis.com/gcm/send";
 
     try {
-      cURLpp::initialize();
+      cURLpp::initialize()
       curlpp::Easy request;
 
       request.setOpt(new curlpp::options::Url(url));
