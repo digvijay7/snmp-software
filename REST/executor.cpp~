@@ -320,50 +320,15 @@ Function to Register and Deregister for the Location Service
 ************************************************************
 */
 
-bool Executor::loc_register(const args_container &args, outputType type, string & response,const string & url, char* ipAddress){
-
-try{
-    pqxx::connection conn("dbname=mydb user=postgres password=admin hostaddr=127.0.0.1 port=5432");
-    if(!conn.is_open()){
-      return false;
-    }
-    pqxx::work w(conn);
-    std::stringstream query1;
-    query1 <<  "SELECT uid FROM uid WHERE ip ='" <<ipAddress<<"';";
-    pqxx::result res = w.exec(query1.str());
-    w.commit();
-    
-    const char* uid = res[0][0].c_str();
-    std::stringstream ss;
-    ss << "INSERT INTO location_service VALUES (" << uid << ", now(),'" << args.appid <<"'); ";
-    return Executor::generic_query(response,ss.str());
-  }
-  catch(const std::exception & e){
-    return false;
-  }
-
-}
-bool Executor::loc_deregister(const args_container &args, outputType type, string & response,const string & url, char* ipAddress){
-
-  try{
-    pqxx::connection conn("dbname=mydb user=postgres password=admin hostaddr=127.0.0.1 port=5432");
-    if(!conn.is_open()){
-      return false;
-    }
-    pqxx::work w(conn);
-    std::stringstream query1;
-    query1 <<  "SELECT uid FROM uid WHERE ip ='" <<ipAddress<<"';";
-    pqxx::result res = w.exec(query1.str());
-    w.commit();
-    
-    const char* uid = res[0][0].c_str();
+bool Executor::loc_register(const args_container &args, outputType type, string & response,const string & url){
   std::stringstream ss;
-  ss<< "DELETE FROM location_service WHERE uid = " << uid << ";";
-  return Executor::generic_query(response,ss.str());  
-  }
-  catch(const std::exception & e){
-    return false;
-  }
+  ss << "INSERT INTO location_service VALUES (" << args.uid << ", now(),'" << args.appid <<"'); ";
+  return Executor::generic_query(response,ss.str());
+}
+bool Executor::loc_deregister(const args_container &args, outputType type, string & response,const string & url){
+  std::stringstream ss;
+  ss<< "DELETE FROM location_service WHERE uid = " << args.uid << ";";
+  return Executor::generic_query(response,ss.str());
 }
 /*
 *****************************

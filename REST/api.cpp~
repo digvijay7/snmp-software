@@ -3,7 +3,6 @@
 #include "api.hpp"
 #include "sha.h"
 #include <iostream>
-#include <pqxx/pqxx>
 
 using namespace ourapi;
 
@@ -12,7 +11,7 @@ api::api()
     set<string> params;
 }
 
-bool api::authenticateAPI(const string& url, const map<string, string>& argvals, string& response, bool & is_sudo, char* ipAddress)
+bool api::authenticateAPI( const map<string, string>& argvals, string& response, bool & is_sudo)
 {
   map<string, string>:: const_iterator it,it2;
   std::string recieved_token;
@@ -40,32 +39,8 @@ bool api::authenticateAPI(const string& url, const map<string, string>& argvals,
   		return false;
   	}
   }
-  if(url == "/register" || url == "/deregister"){
-	try{
-    		pqxx::connection conn("dbname=mydb user=postgres password=admin hostaddr=127.0.0.1 port=5432");
-		if(!conn.is_open()){
-  			return false;
-  	  	}
-		std::stringstream ss;
-		ss <<  "SELECT count(*) FROM uid WHERE ip ='" <<ipAddress<<"';";
-		pqxx::work w(conn);
-		pqxx::result res = w.exec(ss.str());
-		w.commit();
-		const char* val = res[0][0].c_str();
-		if(strcmp(val,"1")==0) {
-			return true;
-		}
-		else{
-			return false;
-		}
-	}
-	catch(const std::exception & e){
-	    return false;
- 	}
-  }
-
   else{
-	response="Invalid API Call";
+  	response="Invalid API Call";
   	return false;
   }
 }
@@ -170,7 +145,7 @@ unsigned long url_type(const std::string & url){
 }
 
   
-bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response,bool & is_sudo, char* ipAddress){
+bool api::executeAPI(const string& url, const map<string, string>& argvals, string& response,bool & is_sudo){
   // Ignore all the args except the "fields" param 
   Executor::outputType type = Executor::TYPE_JSON;
   args_container params;
@@ -196,11 +171,11 @@ bool api::executeAPI(const string& url, const map<string, string>& argvals, stri
         _getInvalidResponse(response);
         return false;
     }*/
-  return _executeAPI(url, params, type, response,is_sudo,  ipAddress);
+  return _executeAPI(url, params, type, response,is_sudo);
 }
 
 bool api::_executeAPI(const string& url, const struct args_container & argvals, 
-        Executor::outputType type, string& response,bool & is_sudo, char* ipAddress)
+        Executor::outputType type, string& response,bool & is_sudo)
 {
   bool ret = false;
   if(_executor.get_type() == VALID_API_UID){
@@ -236,10 +211,10 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
     ret = _executor.attendance_all(argvals,type,response,url);
   }
   else if(_executor.get_type() == VALID_API_REGISTER){
-    ret = _executor.loc_register(argvals,type,response,url, ipAddress);
+    ret = _executor.loc_register(argvals,type,response,url);
   }
   else if(_executor.get_type() == VALID_API_DEREGISTER){
-    ret = _executor.loc_deregister(argvals,type,response,url, ipAddress);
+    ret = _executor.loc_deregister(argvals,type,response,url);
   }
   return ret;
 }
