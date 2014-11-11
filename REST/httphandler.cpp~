@@ -11,10 +11,6 @@
 #include <sstream>
 #include <cstdlib>
 #include <cstdio>
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<netdb.h>
-#include <arpa/inet.h>
 
 using std::map;
 using std::string;
@@ -125,11 +121,6 @@ static int url_handler (void *cls,
     const char *typejson = "json";
     const char *type = typejson;
 
-struct sockaddr *so;
-
-so = MHD_get_connection_info (connection,
-        MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-
     struct MHD_Response *response;
     int ret;
     map<string, string> url_args;
@@ -153,21 +144,11 @@ so = MHD_get_connection_info (connection,
    if (MHD_get_connection_values (connection, MHD_GET_ARGUMENT_KIND, get_url_args, &url_args) < 0) {
     return send_bad_response(connection, "Error - bad url");
   }
-
-struct sockaddr_in *sObj = ( struct sockaddr_in *)so;
-//char *ip = inet_ntoa(sObj->sin_addr);
-
-char ipAddress[INET_ADDRSTRLEN];
-inet_ntop(AF_INET, &(sObj->sin_addr), ipAddress, INET_ADDRSTRLEN);
-
-
-//std::cout<<ipAddress;
-
   bool is_sudo = false;
-  if(callapi.authenticateAPI(url, url_args, respdata_auth, is_sudo, ipAddress) == false){
+  if(callapi.authenticateAPI(url_args, respdata_auth, is_sudo) == false){
       return send_bad_response(connection, respdata_auth);
   }
-  if(callapi.executeAPI(url, url_args, respdata, is_sudo, ipAddress) == false){
+  if(callapi.executeAPI(url, url_args, respdata, is_sudo) == false){
     return send_bad_response(connection, respdata);
   }
   *ptr = 0;                  /* reset when done */
