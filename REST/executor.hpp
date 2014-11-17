@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include "strutil.hpp"
+#include "util.hpp"
 
 using std::string;
 using std::set;
@@ -126,6 +127,12 @@ struct args_container{
     }
     else if(type == VALID_ARGS_UID){
       StrUtil::eraseWhiteSpace(mac);
+      if(mac.size() == 17){
+        mac = snmp::util::mac_formatter(mac);
+      }
+      else if(mac.size() == 12){
+        mac = snmp::util::mac_formatter2(mac);
+      }
     }
   }
 };
