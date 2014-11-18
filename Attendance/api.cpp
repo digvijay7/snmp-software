@@ -160,8 +160,11 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_TA_GET_ROLLNO){
     ret = _executor.ta_get_rollno(argvals,type,response,url);
   }
-  else if(_executor.get_type() == VALID_API_TA_PUT){
-    ret = _executor.ta_put(argvals,type,response,url);
+  else if(_executor.get_type() == VALID_API_TA_PUT_INFO){
+    ret = _executor.ta_put_info(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_TA_PUT_MAC){
+    ret = _executor.ta_put_mac(argvals,type,response,url);
   }
   else if(_executor.get_type() == VALID_API_ATTENDANCE_PUT){
     ret = _executor.attendance_put(argvals,type,response,url);

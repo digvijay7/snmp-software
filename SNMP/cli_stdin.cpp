@@ -201,7 +201,7 @@ info parse(std::vector<std::string> * log, bool getseperator,std::ofstream & out
     				continue;
     			}
           else if(trap == 4){
-            std::cout<<"Trap 4"<<std::endl;
+            //std::cout<<"Trap 4"<<std::endl;
           }
     			while(seen!=3){
     				getline(std::cin,buffer);
@@ -296,6 +296,7 @@ int main(int argc, char* argv[])
 			put_log(out,"Back from parsing.");
 			if(inf.getOk()){
         setseperator = false;
+        std::cout<<inf.getClient()<<std::endl;
 			}
 			else{
 				if(inf.getLineCount()==0){
@@ -311,10 +312,10 @@ int main(int argc, char* argv[])
 			boost::asio::write(socket,boost::asio::buffer(buf),boost::asio::transfer_all(),error);
 			boost::array<char, 2048> stemp;
 			size_t len = socket.read_some(boost::asio::buffer(stemp),error);*/
-      if(inf.getTrap() == 4)
+/*      if(inf.getTrap() == 4)
       std::cout<<inf.getData();
       else
-        std::cout<<"Got some other trap\n";
+        std::cout<<"Got some other trap\n";*/
     }
   }
   catch (std::exception& e){

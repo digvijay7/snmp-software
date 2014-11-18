@@ -91,46 +91,23 @@ bool write_uid(pqxx::result & res,string & response){
 Attendance
 ******************************
 */
-bool Executor::attendance(const args_container &args, outputType type, string & response,const string & url){
+bool Executor::presence(const args_container &args, outputType type, string & response,const string & url){
 	std::stringstream ss;
-	ss << "SELECT * FROM attendance('" << args.email<<"','";
+	ss << "SELECT * FROM presence('" << generatehash(args.mac)<<"','";
   ss << args.from <<"','"<<args.to<<"','";
   ss << args.format <<"');";
   std::cout<<"Making query: "<<ss.str()<<std::endl;
 	return Executor::generic_query(response,ss.str());
 }
 
-bool write_attendance(pqxx::result & res,string & response){
+bool write_presence(pqxx::result & res,string & response){
   ptree root_t,children;
   for(unsigned int row_num =0;row_num<res.size();row_num++){
     ptree child;
     child.put("date",res[row_num][0]);
     children.push_back(make_pair("",child));
   }
-  root_t.add_child("attendance",children);
-  std::ostringstream oss;
-  write_json(oss,root_t);
-  response = oss.str();
-  return true;
-}
-
-bool Executor::attendance_all(const args_container &args, outputType type, string & response,const string & url){
-  std::stringstream ss;
-  ss << "SELECT * FROM all_attendance('";
-  ss << args.from <<"','"<<args.to<<"','";
-  ss << args.format <<"');";
-  return Executor::generic_query(response,ss.str());
-}
-
-bool write_attendance_all(pqxx::result & res,string & response){
-  ptree root_t,children;
-  for(unsigned int row_num =0;row_num<res.size();row_num++){
-    ptree child;
-    child.put("rollno",res[row_num][0]);
-    child.put("date",res[row_num][1]);
-    children.push_back(make_pair("",child));
-  }
-  root_t.add_child("attendance",children);
+  root_t.add_child("presence",children);
   std::ostringstream oss;
   write_json(oss,root_t);
   response = oss.str();
@@ -349,11 +326,8 @@ bool Executor::generic_query(string & response, const string query){
     else if(query_type == VALID_API_SU_PUT){
       return write_su_put(res,response);
     }
-    else if(query_type == VALID_API_ATTENDANCE){
-      return write_attendance(res,response);
-    }
-    else if(query_type == VALID_API_ATTENDANCE_ALL){
-      return write_attendance_all(res,response);
+    else if(query_type == VALID_API_PRESENCE){
+      return write_presence(res,response);
     }
     else { // Write standard or last
       return write_last_std(res,response);

@@ -174,7 +174,39 @@ bool Executor::ta_get_rollno(const args_container &args, outputType type, string
   }
   return true;
 }
-bool Executor::ta_put(const args_container &args, outputType type, string & response,const string & url){
+bool Executor::ta_put_info(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT * FROM put_ta('"+args.rollno+"','"+
+  args.email+"','"+args.name+"','"+args.batch+"');";
+  pqxx::result res;
+  ptree root;
+  if(generic_query_helper(stmt,res)){
+    root.put("status","Entry added");
+    root.put("status code","0");
+  }
+  else{
+    root.put("status","Error in adding");
+    root.put("status code","1");
+  }
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
+  return true;
+}
+bool Executor::ta_put_mac(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT * FROM put_mac('"+args.rollno+"','"+args.mac+"');";
+  pqxx::result res;
+  ptree root;
+  if(generic_query_helper(stmt,res)){
+    root.put("status","Entry added");
+    root.put("status code","0");
+  }
+  else{
+    root.put("status","Error in adding");
+    root.put("status code","1");
+  }
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
   return true;
 }
 

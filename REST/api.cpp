@@ -128,8 +128,8 @@ unsigned long url_type(const std::string & url){
   else if(url == "/su/put"){
     return VALID_URL_SU;
   }
-  else if(url == "/attendance"){
-    return VALID_URL_ATTENDANCE;
+  else if(url == "/presence"){
+    return VALID_URL_PRESENCE;
   }
   return INVALID_URL;
 }
@@ -194,11 +194,8 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_SU_PUT and is_sudo){
     ret = _executor.su_put(argvals,type,response,url);
   }
-  else if(_executor.get_type() == VALID_API_ATTENDANCE){
-    ret = _executor.attendance(argvals,type,response,url);
-  }
-  else if(_executor.get_type() == VALID_API_ATTENDANCE_ALL){
-    ret = _executor.attendance_all(argvals,type,response,url);
+  else if(_executor.get_type() == VALID_API_PRESENCE){
+    ret = _executor.presence(argvals,type,response,url);
   }
   return ret;
 }
