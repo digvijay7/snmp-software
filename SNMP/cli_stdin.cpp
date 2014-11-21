@@ -206,7 +206,6 @@ info parse(std::vector<std::string> * log, bool getseperator,std::ofstream & out
             getseperator = true;
             /*std::cout<<"Continuing reading, encountered a trap type we dont want.\n";*/
             continue;
-          }
     			while(seen!=3){
     				getline(std::cin,buffer);
             //std::cout<<buffer<<std::endl;
@@ -299,7 +298,7 @@ int main(int argc, char* argv[])
       info inf = parse(&log,true,out); //atol(line.c_str())
 			put_log(out,"Back from parsing.");
 			if(inf.getOk()){
-        setseperator = true;
+        setseperator = false;
 			}
 			else{
         setseperator = false;

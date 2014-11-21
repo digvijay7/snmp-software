@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include "strutil.hpp"
+#include "util.hpp"
 
 using std::string;
 using std::set;
@@ -30,10 +31,9 @@ public:
   bool live(const args_container &args, outputType type, string & response,const string & url);
   bool su_get(const args_container &args, outputType type, string & response,const string & url);
   bool su_put(const args_container &args, outputType type, string & response,const string & url);
-  bool attendance(const args_container &args, outputType type, string & response,const string & url);
-  bool attendance_all(const args_container &args, outputType type, string & response,const string & url);	
   bool loc_register(const args_container &args, outputType type, string & response,const string & url, char* ipAddress);
   bool loc_deregister(const args_container &args, outputType type, string & response,const string & url, char* ipAddress);
+  bool presence(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
 private:
@@ -71,9 +71,9 @@ private:
 #define VALID_URL_UID 4096
 #define VALID_URL_LIVE 8192 
 #define VALID_URL_SU 65536
-#define VALID_URL_ATTENDANCE 1048576
 #define VALID_URL_REGISTER 4194304
 #define VALID_URL_DEREGISTER 8388608 
+#define VALID_URL_PRESENCE 1048576
 #define INVALID_URL 0
 #define NO_ARGS 0
 #define VALID_API_UID 4128 // API to get UID
@@ -87,10 +87,9 @@ private:
 #define VALID_API_LIVE 8192
 #define VALID_API_SU_GET 196608
 #define VALID_API_SU_PUT 327681
-#define VALID_API_ATTENDANCE 1572878
-#define VALID_API_ATTENDANCE_ALL 1048590
 #define VALID_API_REGISTER 6291456
 #define VALID_API_DEREGISTER 8388608
+#define VALID_API_PRESENCE ( VALID_URL_PRESENCE + AMAC + AFROM + ATO + AFORMAT)
 #define MAX_ENTRIES 1000
 
 struct args_container{
@@ -134,6 +133,13 @@ struct args_container{
     else if(type == VALID_ARGS_UID){
       StrUtil::eraseWhiteSpace(mac);
     }
+    if(mac.size() == 17){
+      mac = snmp::util::mac_formatter(mac);
+    }
+    else if(mac.size() == 12){
+      mac = snmp::util::mac_formatter2(mac);
+    }
+
   }
 };
 
