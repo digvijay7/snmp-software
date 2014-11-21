@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <ctime>
 
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
@@ -8,7 +9,7 @@
 #include <curlpp/Exception.hpp>
 #include <string>
 
-//#include <pqxx/pqxx>
+#include <pqxx/pqxx>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 //#include <boost/asio.hpp>
@@ -20,7 +21,8 @@ bool make_http_request(
   std::string from_time,
   std::string to_time,
   std::string mac,
-  std::string token)
+  std::string token,
+  std::string & result)
   {
   std::string url = addr + "/presence?mac=" + mac + "&from=" + from_date +
   "-" + from_time + "&to=" + to_date + "-" + to_time + "&format=yyyy-mm-dd-hh24:mi:ss" +
@@ -34,9 +36,7 @@ bool make_http_request(
     request.setOpt(curlpp::options::SslVerifyHost(false));
     request.setOpt(curlpp::options::WriteStream(&ss));
     request.perform();
-    std::string buf;
-    buf = ss.str();
-    std::cout<<buf;
+    result = ss.str();
     cURLpp::terminate();
   }
   catch ( curlpp::LogicError & e ) {
@@ -46,11 +46,34 @@ bool make_http_request(
     std::cout << e.what() << std::endl;
   }
 }
+
+std::string get_today_date(){
+  using namespace std;
+  time_t t = time(0);
+  struct tm * now = localtime(& t);
+  stringstream ss;
+  ss << (now->tm_year)+ 1900 << "-";
+  ss << (now->tm_mon) + 1 << "-";
+  ss << (now->tm_mday);
+  return ss.str();
+}
+
 int main(){
-  std::string url = "https://192.168.1.40:9119";
-  std::string date = 
-  make_http_request("https://127.0.0.1:9119","2014-06-01","2014-08-02",
-  "01:01:00","01:01:01","f0:6b:ca:e2:fd:ee",
-  "3d4e0b1a115953507e908b318a83cdccfe52fe48579d89813114459dbad98a6b");
+  std::string url = "https://192.168.1.40:9136";
+  std::string today = get_today_date();
+  try{
+    pqxx::connection c("dbname=attendance user=postgres password=admin hostaddr=127.0.0.1 port=5432");
+    pqxx::work w(c);
+    pqxx::result res = w.exec("SELECT rollno,mac FROM ta_macs;");
+    std::string output;
+    for(int i=0;i<res.size();i++){
+      make_http_request(url,today,today,"08:00:00","17:00:00",res[i][1].as<std::string>(),
+  "eab8e69002734eda2d14e552d40a8b87112986cf8c93cd3634d23ec128b82c85",output);
+      std::cout<<res[i][0]<<"------\n"<<output<<"------\n";
+    }
+  }
+  catch(std::exception &e){
+    std::cerr<<e.what()<<std::cerr;
+  }
   return 0;
 }
