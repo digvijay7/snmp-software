@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
+#include <vector>
+#include <algorithm>
 
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
@@ -13,6 +15,8 @@
 #include <pqxx/pqxx>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include "boost/date_time/gregorian/gregorian.hpp"
+
 //#include <boost/asio.hpp>
 
 bool make_http_request(
@@ -49,20 +53,40 @@ bool make_http_request(
   }
 }
 
-std::string get_today_date(){
-  using namespace std;
-  time_t t = time(0);
-  struct tm * now = localtime(& t);
-  stringstream ss;
-  ss << (now->tm_year)+ 1900 << "-";
-  ss << (now->tm_mon) + 1 << "-";
-  ss << (now->tm_mday);
-  return ss.str();
+bool strip_dates(std::string json_string,std::vector<std::string> & output){
+  using namespace boost::property_tree;
+  std::stringstream ss;
+  ss << json_string;
+  ptree pt,child,date;
+  read_json(ss,pt);
+  child = pt.get_child("presence");
+  for(ptree::const_iterator it = child->second.begin();it!=child->second.end();it++){
+    std::cout<<it->second<<std::endl;
+  }
+  return true;
 }
 
-int main(){
+bool get_date_range(std::string from, std::string to,std::vector<std::string> & dates){
+  using namespace boost::gregorian;
+  date start(from_simple_string(from)),end(from_simple_string(to));
+  date_period range (start,end);
+  date_duration dd(1);
+  for(date it = range.begin();it!=range.end();it=it+dd){
+    dates.push_back(to_iso_extended_string(it));
+  }
+  return true;
+}
+
+int main(int argc, char * argv[]){
+  if(argc!=3){
+    std::cerr<<"Usage:"<<argv[0]<<" from-date to-date"<<std::endl;
+    return 0;
+  }
   std::string url = "https://192.168.1.40:9136";
-  std::string today = get_today_date();
+  std::string from_date(argv[1]);
+  std::string to_date(argv[2]);
+  std::vector<std::string> dates;
+  std::vector<std::string> date_range = get_date_range(from_date,to_date,dates);
   std::ifstream config_f("config");
   if(!config_f.is_open()){
     std::cerr<<"Error opening config file"<<std::endl;
@@ -86,8 +110,31 @@ int main(){
         from_time = mtech_from_time;
         to_time = mtech_to_time;
       }
-      make_http_request(url,today,today,from_time,to_time,res[i][1].as<std::string>(),
+      make_http_request(url,from_date,to_date,from_time,to_time,res[i][1].as<std::string>(),
       token,output);
+      std::vector<std::string> present_dates;
+      if(strip_dates(output,present_dates)){
+        /*
+        for(int i=0;i<dates.size();i++){
+          std::string stmt;
+          if(std::find(present_dates.begin(),present_dates.end(),dates[i])!=present_dates.end()){
+            stmt = "INSERT INTO attendance(rollno,date,present) VALUES (lower('" +
+            res[i][0].as<std::string>() + "'),'"+dates[i]+"','0');";
+          }
+          else{
+             stmt = "INSERT INTO attendance(rollno,date,present) VALUES (lower('" +
+            res[i][0].as<std::string>() + "'),'"+dates[i]+"','1');";
+          }
+          try{
+            pqxx::work w2(c);
+            pqxx::result res2 = w2.exec(stmt);
+            w2.commit();
+          }
+          catch(std::exception &e){
+            std::cerr<<e.what()<<std::endl;
+          }*/
+        }
+      }
      // std::cout<<res[i][0]<<"------\n"<<output<<"------\n";
     }
   }
