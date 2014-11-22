@@ -16,6 +16,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/foreach.hpp>
 
 //#include <boost/asio.hpp>
 
@@ -60,8 +61,8 @@ bool strip_dates(std::string json_string,std::vector<std::string> & output){
   ptree pt,child,date;
   read_json(ss,pt);
   child = pt.get_child("presence");
-  for(ptree::const_iterator it = child->second.begin();it!=child->second.end();it++){
-    std::cout<<it->second<<std::endl;
+  BOOST_FOREACH(ptree::value_type & it, child){
+    std::cout<<it.second.get<std::string>("date")<<std::endl;
   }
   return true;
 }
@@ -86,7 +87,7 @@ int main(int argc, char * argv[]){
   std::string from_date(argv[1]);
   std::string to_date(argv[2]);
   std::vector<std::string> dates;
-  std::vector<std::string> date_range = get_date_range(from_date,to_date,dates);
+  get_date_range(from_date,to_date,dates);
   std::ifstream config_f("config");
   if(!config_f.is_open()){
     std::cerr<<"Error opening config file"<<std::endl;
@@ -133,9 +134,8 @@ int main(int argc, char * argv[]){
           catch(std::exception &e){
             std::cerr<<e.what()<<std::endl;
           }*/
-        }
+          ;
       }
-     // std::cout<<res[i][0]<<"------\n"<<output<<"------\n";
     }
   }
   catch(std::exception &e){
