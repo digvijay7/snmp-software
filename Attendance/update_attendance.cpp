@@ -62,7 +62,7 @@ bool strip_dates(std::string json_string,std::vector<std::string> & output){
   read_json(ss,pt);
   child = pt.get_child("presence");
   BOOST_FOREACH(ptree::value_type & it, child){
-    std::cout<<it.second.get<std::string>("date")<<std::endl;
+    output.push_back(it.second.get<std::string>("date"));
   }
   return true;
 }
