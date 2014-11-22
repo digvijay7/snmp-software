@@ -2,6 +2,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
 
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
@@ -27,6 +28,7 @@ bool make_http_request(
   std::string url = addr + "/presence?mac=" + mac + "&from=" + from_date +
   "-" + from_time + "&to=" + to_date + "-" + to_time + "&format=yyyy-mm-dd-hh24:mi:ss" +
   "&token=" + token;
+  std::cerr<<"Making query:"<<url<<std::endl;
   std::stringstream ss;
   try {
     cURLpp::initialize();
@@ -61,15 +63,32 @@ std::string get_today_date(){
 int main(){
   std::string url = "https://192.168.1.40:9136";
   std::string today = get_today_date();
+  std::ifstream config_f("config");
+  if(!config_f.is_open()){
+    std::cerr<<"Error opening config file"<<std::endl;
+    return 0;
+  }
+  std::string conn_string,token,phd_from_time,phd_to_time,mtech_from_time,mtech_to_time;
+  getline(config_f,conn_string);
+  getline(config_f,token);
+  config_f >> phd_from_time >> phd_to_time >> mtech_from_time >> mtech_to_time;
   try{
-    pqxx::connection c("dbname=attendance user=postgres password=admin hostaddr=127.0.0.1 port=5432");
+    pqxx::connection c(conn_string);
     pqxx::work w(c);
-    pqxx::result res = w.exec("SELECT rollno,mac FROM ta_macs;");
-    std::string output;
+    pqxx::result res = w.exec("SELECT rollno,mac,batch FROM ta_macs join ta_info ;");
+    std::string output,from_time,to_time;
     for(int i=0;i<res.size();i++){
-      make_http_request(url,today,today,"08:00:00","17:00:00",res[i][1].as<std::string>(),
-  "eab8e69002734eda2d14e552d40a8b87112986cf8c93cd3634d23ec128b82c85",output);
-      std::cout<<res[i][0]<<"------\n"<<output<<"------\n";
+      if(res[i][2].as<std::string>() == "phd"){
+        from_time = phd_from_time;
+        to_time = phd_to_time;
+      }
+      else{
+        from_time = mtech_from_time;
+        to_time = mtech_to_time;
+      }
+      make_http_request(url,today,today,from_time,to_time,res[i][1].as<std::string>(),
+      token,output);
+     // std::cout<<res[i][0]<<"------\n"<<output<<"------\n";
     }
   }
   catch(std::exception &e){
