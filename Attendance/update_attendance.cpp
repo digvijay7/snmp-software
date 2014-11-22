@@ -75,7 +75,7 @@ int main(){
   try{
     pqxx::connection c(conn_string);
     pqxx::work w(c);
-    pqxx::result res = w.exec("SELECT rollno,mac,batch FROM ta_macs join ta_info ;");
+    pqxx::result res = w.exec("SELECT m.rollno,mac,batch FROM ta_macs m join ta_info i on i.rollno = m.rollno;");
     std::string output,from_time,to_time;
     for(int i=0;i<res.size();i++){
       if(res[i][2].as<std::string>() == "phd"){
