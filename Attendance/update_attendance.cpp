@@ -119,11 +119,11 @@ int main(int argc, char * argv[]){
         for(int j=0;j<dates.size();j++){
           std::string stmt;
           if(std::find(present_dates.begin(),present_dates.end(),dates[j])!=present_dates.end()){
-            stmt = "INSERT INTO attendance(rollno,date,present) VALUES (lower('" +
+            stmt = "SELECT * FROM  add_attendance(lower('" +
             res[i][0].as<std::string>() + "'),'"+dates[j]+"','0');";
           }
           else{
-             stmt = "INSERT INTO attendance(rollno,date,present) VALUES (lower('" +
+             stmt = "SELECT * FROM add_attendance(lower('" +
             res[i][0].as<std::string>() + "'),'"+dates[j]+"','1');";
           }
           try{
