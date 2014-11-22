@@ -101,6 +101,7 @@ int main(int argc, char * argv[]){
     pqxx::connection c(conn_string);
     pqxx::work w(c);
     pqxx::result res = w.exec("SELECT m.rollno,mac,batch FROM ta_macs m join ta_info i on i.rollno = m.rollno;");
+    w.commit();
     std::string output,from_time,to_time;
     for(int i=0;i<res.size();i++){
       if(res[i][2].as<std::string>().compare("phd") == 0){
@@ -115,7 +116,6 @@ int main(int argc, char * argv[]){
       token,output);
       std::vector<std::string> present_dates;
       if(strip_dates(output,present_dates)){
-        
         for(int i=0;i<dates.size();i++){
           std::string stmt;
           if(std::find(present_dates.begin(),present_dates.end(),dates[i])!=present_dates.end()){
