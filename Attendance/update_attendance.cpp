@@ -128,6 +128,7 @@ int main(int argc, char * argv[]){
           }
           try{
             pqxx::work w2(c);
+            std::cout<<"Making query:"<<stmt<<std::endl;
             pqxx::result res2 = w2.exec(stmt);
             w2.commit();
           }
