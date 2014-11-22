@@ -116,7 +116,7 @@ int main(int argc, char * argv[]){
       token,output);
       std::vector<std::string> present_dates;
       if(strip_dates(output,present_dates)){
-        for(int j=0;i<dates.size();j++){
+        for(int j=0;j<dates.size();j++){
           std::string stmt;
           if(std::find(present_dates.begin(),present_dates.end(),dates[j])!=present_dates.end()){
             stmt = "INSERT INTO attendance(rollno,date,present) VALUES (lower('" +
