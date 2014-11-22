@@ -116,15 +116,15 @@ int main(int argc, char * argv[]){
       token,output);
       std::vector<std::string> present_dates;
       if(strip_dates(output,present_dates)){
-        for(int i=0;i<dates.size();i++){
+        for(int j=0;i<dates.size();j++){
           std::string stmt;
-          if(std::find(present_dates.begin(),present_dates.end(),dates[i])!=present_dates.end()){
+          if(std::find(present_dates.begin(),present_dates.end(),dates[j])!=present_dates.end()){
             stmt = "INSERT INTO attendance(rollno,date,present) VALUES (lower('" +
-            res[i][0].as<std::string>() + "'),'"+dates[i]+"','0');";
+            res[i][0].as<std::string>() + "'),'"+dates[j]+"','0');";
           }
           else{
              stmt = "INSERT INTO attendance(rollno,date,present) VALUES (lower('" +
-            res[i][0].as<std::string>() + "'),'"+dates[i]+"','1');";
+            res[i][0].as<std::string>() + "'),'"+dates[j]+"','1');";
           }
           try{
             pqxx::work w2(c);
