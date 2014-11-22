@@ -78,7 +78,7 @@ int main(){
     pqxx::result res = w.exec("SELECT m.rollno,mac,batch FROM ta_macs m join ta_info i on i.rollno = m.rollno;");
     std::string output,from_time,to_time;
     for(int i=0;i<res.size();i++){
-      if(res[i][2].as<std::string>() == "phd"){
+      if(res[i][2].as<std::string>().compare("phd") == 0){
         from_time = phd_from_time;
         to_time = phd_to_time;
       }
