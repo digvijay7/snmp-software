@@ -70,8 +70,8 @@ bool strip_dates(std::string json_string,std::vector<std::string> & output){
 bool get_date_range(std::string from, std::string to,std::vector<std::string> & dates){
   using namespace boost::gregorian;
   date start(from_simple_string(from)),end(from_simple_string(to));
-  date_period range (start,end);
   date_duration dd(1);
+  date_period range (start,end+dd);
   for(date it = range.begin();it!=range.end();it=it+dd){
     dates.push_back(to_iso_extended_string(it));
   }
