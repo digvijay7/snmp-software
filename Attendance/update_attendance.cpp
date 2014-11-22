@@ -115,7 +115,7 @@ int main(int argc, char * argv[]){
       token,output);
       std::vector<std::string> present_dates;
       if(strip_dates(output,present_dates)){
-        /*
+        
         for(int i=0;i<dates.size();i++){
           std::string stmt;
           if(std::find(present_dates.begin(),present_dates.end(),dates[i])!=present_dates.end()){
@@ -133,8 +133,8 @@ int main(int argc, char * argv[]){
           }
           catch(std::exception &e){
             std::cerr<<e.what()<<std::endl;
-          }*/
-          ;
+          }
+        }
       }
     }
   }
