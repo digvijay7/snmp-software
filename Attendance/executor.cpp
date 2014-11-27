@@ -3,6 +3,11 @@
 #include <vector>
 #include <sstream>
 #include <map>
+#include <utility>
+
+
+typedef std::map<std::string,std::vector<std::pair<std::string,std::string> > > attendance_map;
+
 #include <string>
 #include <stdint.h>
 #include <boost/property_tree/ptree.hpp>
@@ -24,6 +29,7 @@ using std::make_pair;
 using std::vector;
 
 enum get_mac_by {EMAIL, ROLLNO};
+
 
 Executor::Executor()
 {
@@ -249,43 +255,54 @@ bool Executor::attendance_put(const args_container &args, outputType type, strin
   return true;
 }
 
-bool write_attendance(pqxx::result & res,string & response){
-  ptree root_t,children;
-  for(unsigned int row_num =0;row_num<res.size();row_num++){
-    ptree child;
-    child.put("date",res[row_num][0]);
-    children.push_back(make_pair("",child));
-  }
-  root_t.add_child("attendance",children);
-  std::ostringstream oss;
-  write_json(oss,root_t);
-  response = oss.str();
-  return true;
-}
 
 bool Executor::attendance_get_all(const args_container &args, outputType type, string & response,const string & url){
   std::stringstream ss;
   ss << "SELECT * FROM all_attendance('";
   ss << args.from <<"','"<<args.to<<"','";
   ss << args.format <<"');";
-  return Executor::generic_query(response,ss.str());
-}
-
-
-bool write_attendance_all(pqxx::result & res,string & response){
-  ptree root_t,children;
-  for(unsigned int row_num =0;row_num<res.size();row_num++){
-    ptree child;
-    child.put("rollno",res[row_num][0]);
-    child.put("date",res[row_num][1]);
-    children.push_back(make_pair("",child));
+  pqxx::result res;
+  ptree root,children;
+  if(generic_query_helper(ss.str(),res)){
+    root.put("status","OK");
+    root.put("status code","0");
+    root.put("from",args.from);
+    root.put("to",args.to);
+    root.put("format",args.format);
+    attendance_map attendance;
+    std::string rollno,date,status;
+    for(unsigned int i=0;i<res.size();i++){
+      rollno = res[i][0].as<std::string>(); date = res[i][1].as<std::string>();
+      status = res[i][2].as<std::string>();
+      attendance[rollno].push_back(std::make_pair(date,status));
+    }
+    for(attendance_map::iterator it = attendance.begin();
+        it != attendance.end();
+        it++){
+      ptree child1,child2,children2;
+      child1.put("rollno",it->first);
+      for(unsigned int i=0 ; i< it->second.size() ; i++){
+        if(it->second[i].second.compare("1") == 0){
+          child2.put("",it->second[i].first);
+          children2.push_back(make_pair("",child2));
+        }
+      }
+      child1.add_child("present_dates",children2);
+      children.push_back(make_pair("",child1));
+    }
+    root.add_child("attendance",children);
   }
-  root_t.add_child("attendance",children);
-  std::ostringstream oss;
-  write_json(oss,root_t);
+  else{
+    root.put("status","Error in getting attendance");
+    root.put("status code","1");
+  }
+  std::stringstream oss;
+  write_json(oss,root);
   response = oss.str();
-  return true;
+  return false;
 }
+
+
 /*
 *****************************
 Function to execute SQL query

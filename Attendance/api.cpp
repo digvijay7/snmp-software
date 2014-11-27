@@ -172,6 +172,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_ATTENDANCE_GET_ALL){
     ret = _executor.attendance_get_all(argvals,type,response,url);
   }
+  else {
+    response = "Inavlid API";
+  }
   return ret;
 }
 
