@@ -88,7 +88,7 @@ unsigned long fill_args(const map<string,string> & args, struct args_container &
     }
     else if(it->first == "present"){
       result |= APRESENT;
-      params.rollno = it->second;
+      params.present = it->second;
     }
     else if(it->first == "at"){
       result |= AAT;
