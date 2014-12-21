@@ -86,6 +86,15 @@ unsigned long fill_args(const map<string,string> & args, struct args_container &
       result |= AROLLNO;
       params.rollno = it->second;
     }
+    else if(it->first == "present"){
+      result |= APRESENT;
+      params.rollno = it->second;
+    }
+    else if(it->first == "at"){
+      result |= AAT;
+      params.at = it->second;
+    }
+
     it++;
   }
   params.type = result;
@@ -145,6 +154,7 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
         Executor::outputType type, string& response,bool & is_sudo)
 {
   bool ret = false;
+  std::cout<<_executor.get_type()<<std::endl;
   if(_executor.get_type() == VALID_API_ATTENDANCE_GET_EMAIL){
     ret = _executor.attendance_get_email(argvals,type,response,url);
   }

@@ -57,7 +57,7 @@ private:
 #define ABATCH 262144
 #define AEMAIL 524288
 #define AFTIME 512
-#define ATTIME 1024
+#define APRESENT 1024
 #define VALID_URL_AUTH 256
 #define VALID_URL_ATTENDANCE_GET 1048576
 #define VALID_URL_ATTENDANCE_PUT 2048
@@ -69,7 +69,7 @@ private:
 #define VALID_API_AUTH 448
 #define VALID_API_ATTENDANCE_GET_EMAIL 1572878
 #define VALID_API_ATTENDANCE_GET_ROLLNO 1179662
-#define VALID_API_ATTENDANCE_PUT 690208 // Has to be changed
+#define VALID_API_ATTENDANCE_PUT (VALID_URL_ATTENDANCE_PUT + AROLLNO + AAT + AFORMAT + APRESENT)
 #define VALID_API_ATTENDANCE_GET_ALL 1048590 //(VALID_URL_ATTENDANCE_GET + AFROM + ATO + AFORMAT)
 #define VALID_API_TA_GET_EMAIL (VALID_URL_TA_GET + AEMAIL)
 #define VALID_API_TA_GET_ROLLNO (VALID_URL_TA_GET + AROLLNO)
@@ -80,9 +80,11 @@ private:
 
 struct args_container{
   string type;
-  string name,from,to,format,last,mac,at,rollno,email,batch;
+  string name,from,to,format,last,mac,at,rollno,email,batch,present;
   args_container(){
+    present = "0";
   }
+
 
   void erase_whitespace(){
 /*    if(type == VALID_ARGS_STD){

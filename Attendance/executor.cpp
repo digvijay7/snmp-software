@@ -247,11 +247,21 @@ bool Executor::attendance_get_rollno(const args_container &args, outputType type
 }
 
 bool Executor::attendance_put(const args_container &args, outputType type, string & response,const string & url){
-  std::string mac;
-  //Get UID from MAC
-
-  //And get logs
-  response = mac;
+  std::string stmt = "SELECT  * FROM update_attendance('"+args.rollno+
+  "','"+args.at+"','"+args.format+"','"+args.present+"');";
+  pqxx::result res;
+  ptree root;
+  if(generic_query_helper(stmt,res)){
+    root.put("status","Entry added");
+    root.put("status code","0");
+  }
+  else{
+    root.put("status","Error in adding");
+    root.put("status code","1");
+  }
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
   return true;
 }
 
