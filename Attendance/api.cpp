@@ -117,6 +117,9 @@ unsigned long url_type(const std::string & url){
   else if(url == "/ta/put"){
     return VALID_URL_TA_PUT;
   }
+  else if(url == "/ta/del"){
+    return VALID_URL_TA_DEL;
+  }
   return INVALID_URL;
 }
 
@@ -179,8 +182,14 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_ATTENDANCE_PUT){
     ret = _executor.attendance_put(argvals,type,response,url);
   }
+  else if(_executor.get_type() == VALID_API_ATTENDANCE_PUT_TIME){
+    ret = _executor.attendance_put_time(argvals,type,response,url);
+  }
   else if(_executor.get_type() == VALID_API_ATTENDANCE_GET_ALL){
     ret = _executor.attendance_get_all(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_TA_DEL){
+    ret = _executor.ta_del(argvals,type,response,url);
   }
   else {
     response = "Inavlid API";

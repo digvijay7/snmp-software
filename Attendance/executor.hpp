@@ -24,12 +24,14 @@ public:
     Executor();
   bool attendance_get_email(const args_container &args, outputType type, string & response,const string & url);
   bool ta_get_email(const args_container &args, outputType type, string & response,const string & url);
+  bool ta_del(const args_container &args, outputType type, string & response,const string & url);
   bool ta_get_rollno(const args_container &args, outputType type, string & response,const string & url);
   bool ta_get_all(const args_container &args, outputType type, string & response,const string & url);
   bool ta_put_info(const args_container &args, outputType type, string & response,const string & url);
   bool ta_put_mac(const args_container &args, outputType type, string & response,const string & url);
   bool attendance_get_rollno(const args_container &args, outputType type, string & response,const string & url);
   bool attendance_put(const args_container &args, outputType type, string & response,const string & url);
+  bool attendance_put_time(const args_container &args, outputType type, string & response,const string & url);
   bool attendance_get_all(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
@@ -56,24 +58,27 @@ private:
 #define AROLLNO 131072
 #define ABATCH 262144
 #define AEMAIL 524288
-#define AFTIME 512
+//#define AFTIME 512
 #define APRESENT 1024
 #define VALID_URL_AUTH 256
 #define VALID_URL_ATTENDANCE_GET 1048576
 #define VALID_URL_ATTENDANCE_PUT 2048
 #define VALID_URL_TA_GET 4096
 #define VALID_URL_TA_PUT 8192
+#define VALID_URL_TA_DEL 512
 #define INVALID_URL 0
 #define NO_ARGS 0
 #define VALID_API_UID 4128 // API to get UID
 #define VALID_API_AUTH 448
 #define VALID_API_ATTENDANCE_GET_EMAIL 1572878
 #define VALID_API_ATTENDANCE_GET_ROLLNO 1179662
+#define VALID_API_ATTENDANCE_PUT_TIME (VALID_URL_ATTENDANCE_PUT + ABATCH + AFROM + ATO)
 #define VALID_API_ATTENDANCE_PUT (VALID_URL_ATTENDANCE_PUT + AROLLNO + AAT + AFORMAT + APRESENT)
 #define VALID_API_ATTENDANCE_GET_ALL 1048590 //(VALID_URL_ATTENDANCE_GET + AFROM + ATO + AFORMAT)
 #define VALID_API_TA_GET_EMAIL (VALID_URL_TA_GET + AEMAIL)
 #define VALID_API_TA_GET_ROLLNO (VALID_URL_TA_GET + AROLLNO)
 #define VALID_API_TA_GET_ALL (VALID_URL_TA_GET)
+#define VALID_API_TA_DEL (VALID_URL_TA_DEL + AROLLNO)
 #define VALID_API_TA_PUT_INFO (VALID_URL_TA_PUT + AEMAIL + AROLLNO + ANAME +ABATCH)
 #define VALID_API_TA_PUT_MAC (VALID_URL_TA_PUT + AROLLNO + AMAC)
 #define MAX_ENTRIES 1000

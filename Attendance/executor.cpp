@@ -198,6 +198,23 @@ bool Executor::ta_put_info(const args_container &args, outputType type, string &
   response = oss.str();
   return true;
 }
+bool Executor::ta_del(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT * FROM del_ta('"+args.rollno+"');";
+  pqxx::result res;
+  ptree root;
+  if(generic_query_helper(stmt,res)){
+    root.put("status","Entry deleted");
+    root.put("status code","0");
+  }
+  else{
+    root.put("status","Error in deleting");
+    root.put("status code","1");
+  }
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
+  return true;
+}
 bool Executor::ta_put_mac(const args_container &args, outputType type, string & response,const string & url){
   std::string stmt = "SELECT * FROM put_mac('"+args.rollno+"','"+args.mac+"');";
   pqxx::result res;
@@ -264,21 +281,48 @@ bool Executor::attendance_put(const args_container &args, outputType type, strin
   response = oss.str();
   return true;
 }
-
+bool Executor::attendance_put_time(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT  * FROM update_attendance_timing('"+args.batch+
+  "','"+args.from+"','"+args.to+"');";
+  pqxx::result res;
+  ptree root;
+  if(generic_query_helper(stmt,res)){
+    root.put("status","Entry added");
+    root.put("status code","0");
+  }
+  else{
+    root.put("status","Error in adding");
+    root.put("status code","1");
+  }
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
+  return true;
+}
 
 bool Executor::attendance_get_all(const args_container &args, outputType type, string & response,const string & url){
   std::stringstream ss;
   ss << "SELECT * FROM all_attendance('";
   ss << args.from <<"','"<<args.to<<"','";
   ss << args.format <<"');";
-  pqxx::result res;
+  pqxx::result res,res2;
   ptree root,children;
-  if(generic_query_helper(ss.str(),res)){
+  std::string stmt2 = "SELECT * FROM attendance_timings";
+  if(generic_query_helper(ss.str(),res) and generic_query_helper(stmt2,res2)){
     root.put("status","OK");
     root.put("status code","0");
     root.put("from",args.from);
     root.put("to",args.to);
     root.put("format",args.format);
+    ptree timings;
+    for(unsigned int i=0;i<res2.size();i++){
+      ptree child1;
+      child1.put("batch",res2[i]["batch"]); // Not a good way to reference columns directly, incase someone messes with the attendance_timings table
+      child1.put("from",res2[i]["from_time"]);
+      child1.put("to",res2[i]["to_time"]);
+      timings.push_back(make_pair("",child1));
+    }
+    root.add_child("timings",timings);
     attendance_map attendance;
     std::string rollno,date,status;
     for(unsigned int i=0;i<res.size();i++){
