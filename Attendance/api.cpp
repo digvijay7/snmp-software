@@ -191,6 +191,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_TA_DEL){
     ret = _executor.ta_del(argvals,type,response,url);
   }
+  else if(_executor.get_type() == VALID_API_TA_MAC_DEL){
+    ret = _executor.ta_mac_del(argvals,type,response,url);
+  }
   else {
     response = "Inavlid API";
   }

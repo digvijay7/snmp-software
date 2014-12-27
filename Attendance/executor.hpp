@@ -25,6 +25,7 @@ public:
   bool attendance_get_email(const args_container &args, outputType type, string & response,const string & url);
   bool ta_get_email(const args_container &args, outputType type, string & response,const string & url);
   bool ta_del(const args_container &args, outputType type, string & response,const string & url);
+  bool ta_mac_del(const args_container &args, outputType type, string & response,const string & url);
   bool ta_get_rollno(const args_container &args, outputType type, string & response,const string & url);
   bool ta_get_all(const args_container &args, outputType type, string & response,const string & url);
   bool ta_put_info(const args_container &args, outputType type, string & response,const string & url);
@@ -79,6 +80,7 @@ private:
 #define VALID_API_TA_GET_ROLLNO (VALID_URL_TA_GET + AROLLNO)
 #define VALID_API_TA_GET_ALL (VALID_URL_TA_GET)
 #define VALID_API_TA_DEL (VALID_URL_TA_DEL + AROLLNO)
+#define VALID_API_TA_MAC_DEL (VALID_URL_TA_DEL + AROLLNO + AMAC)
 #define VALID_API_TA_PUT_INFO (VALID_URL_TA_PUT + AEMAIL + AROLLNO + ANAME +ABATCH)
 #define VALID_API_TA_PUT_MAC (VALID_URL_TA_PUT + AROLLNO + AMAC)
 #define MAX_ENTRIES 1000
