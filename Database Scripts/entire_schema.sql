@@ -25,6 +25,32 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 SET search_path = public, pg_catalog;
 
 --
+-- Name: all_attendance(character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION all_attendance(character varying, character varying, character varying) RETURNS TABLE(emails character varying, dates date)
+    LANGUAGE plpgsql
+    AS $_$
+  DECLARE
+  from_time timestamp;
+  to_time timestamp;
+
+  BEGIN
+  from_time := to_timestamp($1,$3);
+  to_time := to_timestamp($2,$3);
+
+  RETURN QUERY SELECT rollno,ts::date FROM logs JOIN uid on client_id = uid WHERE ts::date >= from_time::date AND ts::date <= to_time::date
+  AND ( (batch != 'phd' AND ts::time >= time '08:00:00' AND ts::time <= time '17:00:00') OR (batch = 'phd' AND ts::time >= time '09:00:00' AND ts::time <= time '18:00:00'))
+  AND device_id IN (SELECT uid FROM label WHERE building = 'Academic')
+  AND client_id IN ( SELECT uid FROM uid WHERE ta = 1)
+  GROUP BY rollno,ts::date ORDER BY ts::date;
+  END
+  $_$;
+
+
+ALTER FUNCTION public.all_attendance(character varying, character varying, character varying) OWNER TO postgres;
+
+--
 -- Name: all_client_std(character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -104,6 +130,54 @@ $_$;
 
 
 ALTER FUNCTION public.at_all_count(in_from character varying, in_format character varying) OWNER TO postgres;
+
+--
+-- Name: attendance(character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION attendance(character varying, character varying, character varying, character varying) RETURNS TABLE(dates date)
+    LANGUAGE plpgsql
+    AS $_$
+  DECLARE
+  from_time timestamp;
+  to_time timestamp;
+
+  BEGIN
+  from_time := to_timestamp($2,$4);
+  to_time := to_timestamp($3,$4);
+
+  RETURN QUERY SELECT ts::date FROM logs JOIN uid ON uid = client_id 
+  WHERE ts>= from_time AND ts <= to_time
+  AND ( (batch != 'phd' AND ts::time >= time '08:00:00' AND ts::time <= time '17:00:00') OR (batch = 'phd' AND ts::time >= time '07:00:00' AND ts::time <= time '21:00:00'))
+  AND device_id IN (SELECT uid FROM label WHERE building = 'Academic')
+  AND client_id IN ( SELECT uid FROM uid WHERE lower(email) = lower($1) AND ta = 1)
+  GROUP BY ts::date ORDER BY ts::date;
+  END
+  $_$;
+
+
+ALTER FUNCTION public.attendance(character varying, character varying, character varying, character varying) OWNER TO postgres;
+
+--
+-- Name: attendance_at(character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION attendance_at(in_from character varying, in_format character varying, in_batch character varying, in_room character varying) RETURNS TABLE(rollno character varying)
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+from_time timestamp;
+to_time timestamp;
+
+BEGIN
+from_time := to_timestamp($1,$2) - interval '2 hours';
+to_time := to_timestamp($1,$2);
+RETURN QUERY SELECT U.rollno from uid U join logs L on U.uid = L.client_id JOIN label R on L.device_id = R.uid WHERE (L.client_id,L.ts) in (SELECT client_id,max(ts) from logs where ts >= from_time and ts <= to_time GROUP BY client_id) and L.type = 1 and R.room = in_room and U.rollno IS NOT NULL ORDER BY U.rollno;
+END
+$_$;
+
+
+ALTER FUNCTION public.attendance_at(in_from character varying, in_format character varying, in_batch character varying, in_room character varying) OWNER TO postgres;
 
 --
 -- Name: client_last(integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -545,6 +619,83 @@ $_$;
 ALTER FUNCTION public.no_access_device_std(character varying, character varying, character varying, integer) OWNER TO postgres;
 
 --
+-- Name: presence(character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION presence(character varying, character varying, character varying, character varying) RETURNS TABLE(dates date)
+    LANGUAGE plpgsql
+    AS $_$
+  DECLARE
+  from_date date;
+  to_date date;
+  from_time timestamp;
+  to_time timestamp;
+  id int;
+  BEGIN
+  from_time := to_timestamp($2,$4);
+  to_time := to_timestamp($3,$4);
+  from_date := from_time::date;
+  to_date := to_time::date;
+  SELECT uid INTO id FROM uid WHERE hash = decode($1,'hex') and access >= 2;
+  RETURN QUERY WITH academic_ids as(
+  SELECT uid  from label where building ='Academic'
+  )
+  SELECT ts::date FROM logs JOIN uid ON uid = client_id
+  WHERE ts::date >= from_date AND ts::date <= to_date
+  AND client_id = id
+  AND ts::time >= from_time::time  AND ts::time <= to_time::time
+  AND device_id IN (select * from academic_ids)
+  GROUP BY ts::date ORDER BY ts::date;
+  END
+  $_$;
+
+
+ALTER FUNCTION public.presence(character varying, character varying, character varying, character varying) OWNER TO postgres;
+
+--
+-- Name: service_insert(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION service_insert() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  found_uid integer;
+   label_row label%rowtype;
+  _building varchar := '';
+  _floor varchar := '';
+  _room varchar := '';
+  _wing varchar := '';
+  _regId location_service%rowtype;
+BEGIN
+  SELECT count(*) INTO found_uid FROM location_service WHERE (NEW.client_id = location_service.uid) AND NEW.type=1;
+  IF (found_uid = 1) THEN
+  SELECT * INTO _regId FROM location_service WHERE NEW.client_id = location_service.uid;
+  FOR label_row.building, label_row.floor, label_row.wing, label_row.room IN SELECT building, floor, wing, room FROM label where
+  NEW.device_id = label.uid LOOP
+    IF (label_row.building IS NOT NULL) THEN
+      _building = label_row.building;
+          END IF;
+    IF (label_row.floor IS NOT NULL) THEN
+      _floor = label_row.floor;
+          END IF;
+    IF (label_row.wing IS NOT NULL) THEN
+      _wing = label_row.wing;
+          END IF;
+    IF (label_row.room IS NOT NULL) THEN
+      _room = label_row.room;
+          END IF;
+  END LOOP;
+  PERFORM pg_notify('channel_service_insert', '{"data":' || '{"uid":' || NEW.client_id || ',"time":"' || NEW.ts || '","ap_id":'|| NEW.device_id || ',"label":"'|| NEW.label || '","building":"'|| _building || '","floor":"' || _floor || '","wing":"' || _wing || '","room":"' || _room || '"},"registration_ids":["' || _regId.gcm_appid || '"]}');
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.service_insert() OWNER TO postgres;
+
+--
 -- Name: tmp_all_count(character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -683,6 +834,19 @@ CREATE TABLE live_table (
 ALTER TABLE public.live_table OWNER TO postgres;
 
 --
+-- Name: location_service; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE location_service (
+    uid integer NOT NULL,
+    ts timestamp without time zone NOT NULL,
+    gcm_appid text NOT NULL
+);
+
+
+ALTER TABLE public.location_service OWNER TO postgres;
+
+--
 -- Name: logs; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -691,7 +855,7 @@ CREATE TABLE logs (
     client_id integer NOT NULL,
     ts timestamp without time zone NOT NULL,
     label character varying(30),
-    type integer
+    type integer NOT NULL
 );
 
 
@@ -723,7 +887,8 @@ CREATE TABLE uid (
     ip character varying(15),
     rollno character varying,
     email character varying,
-    type character varying
+    type character varying,
+    ta integer DEFAULT 0
 );
 
 
@@ -779,11 +944,19 @@ ALTER TABLE ONLY label
 
 
 --
+-- Name: location_service_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY location_service
+    ADD CONSTRAINT location_service_pkey PRIMARY KEY (uid);
+
+
+--
 -- Name: logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
 ALTER TABLE ONLY logs
-    ADD CONSTRAINT logs_pkey PRIMARY KEY (device_id, client_id, ts);
+    ADD CONSTRAINT logs_pkey PRIMARY KEY (device_id, client_id, ts, type);
 
 
 --
@@ -811,10 +984,31 @@ ALTER TABLE ONLY users
 
 
 --
+-- Name: logs_client_id_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX logs_client_id_idx ON logs USING btree (client_id);
+
+
+--
+-- Name: logs_device_id_client_id_ts_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX logs_device_id_client_id_ts_idx ON logs USING btree (device_id, client_id, ts);
+
+
+--
 -- Name: timestamp_index; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE INDEX timestamp_index ON logs USING btree (ts);
+
+
+--
+-- Name: notify_service_insert; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER notify_service_insert AFTER INSERT ON logs FOR EACH ROW EXECUTE PROCEDURE service_insert();
 
 
 --
