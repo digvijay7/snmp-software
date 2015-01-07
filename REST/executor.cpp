@@ -23,6 +23,8 @@ using std::make_pair;
 using std::vector;
 
 
+std::vector<std::string> location_type={"b","f","w","r"};
+
 Executor::Executor()
 {
 }
@@ -122,7 +124,7 @@ Getting last N entries function
 bool Executor::last(const args_container &args, outputType type, string & response,const string & url){
   std::stringstream ss;
   if( url == "/client"){
-    ss << "select * from client_last(" << args.uid <<")";
+    ss << "select * from client_last_building(" << args.uid <<")";
   }
   else if( url == "/ap"){
     ss << "select * from device_last(" << args.uid << ")";
@@ -161,6 +163,20 @@ bool write_last_std(pqxx::result & res, string & response){
     child.put("client_id",res[rownum][1]);
     child.put("from",res[rownum][2]);
     child.put("to",res[rownum][3]);
+    if(res.columns() > 4){
+      std::stringstream ss;
+      unsigned int i=0;
+      for(unsigned int col = 4;col<res.columns();col++){
+        if(i>4){break;} //This for loop has to be improved
+        if(res[rownum][col].as<std::string>() != ""){
+          ss <<location_type[i]<<":"<<res[rownum][col];
+          if(col<res.columns()-1 and res[rownum][col+1].as<std::string>()!="")
+          { ss<<","; }
+          i++;
+        }
+      }
+      child.put("location",ss.str());
+    }
     children.push_back(make_pair("",child));
   }
   root_t.add_child("log entries",children);
