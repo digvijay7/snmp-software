@@ -19,6 +19,7 @@
 #include <boost/foreach.hpp>
 
 //#include <boost/asio.hpp>
+// To compile: g++ update_attendance.cpp -lcurlpp -lcurl -lpqxx -lpq -lboost_system -lboost_date_time 2>&1 -o update_attendance.out | more
 
 bool make_http_request(
   std::string addr,
@@ -90,8 +91,12 @@ int main(int argc, char * argv[]){
   get_date_range(from_date,to_date,dates);
   std::ifstream config_f("config");
   if(!config_f.is_open()){
-    std::cerr<<"Error opening config file"<<std::endl;
-    return 0;
+    //Take input of location of config file as command line argument
+    config_f.open("/home/digvijay/Desktop/working-directory/testing/Attendance/config");
+    if( !config_f.is_open()){
+      std::cerr<<"Error opening config file"<<std::endl;
+      return 0;
+    }
   }
   std::string conn_string,token,phd_from_time,phd_to_time,mtech_from_time,mtech_to_time;
   getline(config_f,conn_string);
@@ -120,11 +125,11 @@ int main(int argc, char * argv[]){
           std::string stmt;
           if(std::find(present_dates.begin(),present_dates.end(),dates[j])!=present_dates.end()){
             stmt = "SELECT * FROM  add_attendance(lower('" +
-            res[i][0].as<std::string>() + "'),'"+dates[j]+"','0');";
+            res[i][0].as<std::string>() + "'),'"+dates[j]+"','1');";
           }
           else{
              stmt = "SELECT * FROM add_attendance(lower('" +
-            res[i][0].as<std::string>() + "'),'"+dates[j]+"','1');";
+            res[i][0].as<std::string>() + "'),'"+dates[j]+"','0');";
           }
           try{
             pqxx::work w2(c);
