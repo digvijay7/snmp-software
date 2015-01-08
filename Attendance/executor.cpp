@@ -257,15 +257,28 @@ Attendance
 ******************************
 */
 bool Executor::attendance_get_email(const args_container &args, outputType type, string & response,const string & url){
-  std::string mac="Reached here";
-  if(!get_mac(args.email,EMAIL,mac)){
-    response = "No such email found"; //TBD: create a (JSON) error generating function
-    return false;
+  std::stringstream ss;
+  ss << "SELECT * FROM get_attendance_email('";
+  ss << args.from <<"','"<<args.to<<"','";
+  ss << args.format <<"','"<<args.email<<"');";
+  pqxx::result res1;
+  if(generic_query_helper(ss.str(),res1)){
+    ptree root_t,children;
+    root_t.put("status","Okay");
+    root_t.put("status code","0");
+    root_t.put("email",args.email);
+    for(unsigned int row_num=0;row_num<res1.size();row_num++){
+      ptree child;
+      if(res1[row_num][1].as<std::string>() == "1"){
+        child.put("",res1[row_num][0]);
+        children.push_back(make_pair("",child));
+      }
+    }
+    root_t.add_child("present_dates",children);
+    std::ostringstream oss;
+    write_json(oss,root_t);
+    response = oss.str();
   }
-  //Get UID from MAC
-
-  //And get logs
-  response = mac;
   return true;
 }
 bool Executor::attendance_get_rollno(const args_container &args, outputType type, string & response,const string & url){
