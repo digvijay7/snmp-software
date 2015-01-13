@@ -34,6 +34,7 @@ public:
   bool loc_register(const args_container &args, outputType type, string & response,const string & url, char* ipAddress);
   bool loc_deregister(const args_container &args, outputType type, string & response,const string & url, char* ipAddress);
   bool presence(const args_container &args, outputType type, string & response,const string & url);
+  bool presence_location(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
 private:
@@ -58,7 +59,8 @@ private:
 #define ATYPE 32768
 #define AROLLNO 131072
 #define AACCESS 262144
-#define AEMAIL 524288
+//#define AEMAIL 524288 // Check if AEMAIL is not used anywhere
+#define ALOCATION 524288
 #define AAPPID 2097152
 #define VALID_ARGS_AT 49160
 #define VALID_ARGS_STD 15
@@ -76,6 +78,7 @@ private:
 #define VALID_URL_PRESENCE 1048576
 #define INVALID_URL 0
 #define NO_ARGS 0
+//TBD: Write all valid_apis along with their argument/url macros (in comment form)
 #define VALID_API_UID 4128 // API to get UID
 #define VALID_API_AUTH 448
 #define VALID_API_AP_STD 1039
@@ -90,12 +93,13 @@ private:
 #define VALID_API_REGISTER 6291456
 #define VALID_API_DEREGISTER 8388608
 #define VALID_API_PRESENCE ( VALID_URL_PRESENCE + AMAC + AFROM + ATO + AFORMAT)
+#define VALID_API_PRESENCE_LOCATION ( VALID_API_PRESENCE + ALOCATION)
 #define MAX_ENTRIES 1000
 
 struct args_container{
   unsigned long type;
   int access;
-  string uid,from,to,format,last,mac,at,rollno,email,appid;
+  string uid,from,to,format,last,mac,at,rollno,email,appid,building_str,floor_str;
   bool building,floor,wing,room;
   args_container(){
     building = floor = wing = room = false;

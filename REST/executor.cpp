@@ -101,6 +101,19 @@ bool Executor::presence(const args_container &args, outputType type, string & re
   std::cout<<"Making query: "<<ss.str()<<std::endl;
 	return Executor::generic_query(response,ss.str());
 }
+bool Executor::presence_location(const args_container &args, outputType type, string & response,const string & url){
+	std::stringstream ss;
+  std::string building,floor;
+  if(args.building) building = args.building_str;
+  if(args.floor) floor = args.floor_str;
+  else floor = 'any';
+  ss << "SELECT * FROM presence_location('" << generatehash(args.mac)<<"','";
+  ss << args.from <<"','"<<args.to<<"','";
+  ss << args.format <<"','"<<args.building_str"','";
+  ss << args.floor_str<<"');";
+  std::cout<<"Making query: "<<ss.str()<<std::endl;
+	return Executor::generic_query(response,ss.str());
+}
 
 bool write_presence(pqxx::result & res,string & response){
   ptree root_t,children;
@@ -393,7 +406,7 @@ bool Executor::generic_query(string & response, const string query){
     else if(query_type == VALID_API_SU_PUT){
       return write_su_put(res,response);
     }
-    else if(query_type == VALID_API_PRESENCE){
+    else if(query_type == VALID_API_PRESENCE or query_type == VALID_API_PRESENCE_LOCATION){
       return write_presence(res,response);
     }
     else { // Write standard or last

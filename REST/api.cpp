@@ -110,9 +110,19 @@ unsigned long fill_args(const map<string,string> & args, struct args_container &
         params.set(c); // If an invalid character is in the input an error should be thrown back - right now, all unidentified characters are ignored
       }
     }
-    else if(it->first == "email"){
-      result |= AEMAIL;
-      params.email= it->second;
+    else if(it->first == "location"){
+      result |= ALOCATION;
+      std::vector<std::string> args = snmp::util::split(it->second,'+');
+      if(args.size() == 2){
+        params.set('b');
+        params.set('f');
+        params.building_str = args[0];
+        params.floor_str = args[1];
+      }
+      else if(args.size() == 1){
+        params.set('b');
+        params.building_str = args[0];
+      }
     }
     else if(it->first == "rollno"){
       result |= AROLLNO;
@@ -231,6 +241,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   }
   else if(_executor.get_type() == VALID_API_PRESENCE){
     ret = _executor.presence(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_PRESENCE_LOCATION){
+    ret = _executor.presence_location(argvals,type,response,url);
   }
   else if(_executor.get_type() == VALID_API_REGISTER){
     ret = _executor.loc_register(argvals,type,response,url, ipAddress);
