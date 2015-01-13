@@ -106,10 +106,10 @@ bool Executor::presence_location(const args_container &args, outputType type, st
   std::string building,floor;
   if(args.building) building = args.building_str;
   if(args.floor) floor = args.floor_str;
-  else floor = 'any';
+  else floor = "any";
   ss << "SELECT * FROM presence_location('" << generatehash(args.mac)<<"','";
   ss << args.from <<"','"<<args.to<<"','";
-  ss << args.format <<"','"<<args.building_str"','";
+  ss << args.format <<"','"<<args.building_str<<"','";
   ss << args.floor_str<<"');";
   std::cout<<"Making query: "<<ss.str()<<std::endl;
 	return Executor::generic_query(response,ss.str());
