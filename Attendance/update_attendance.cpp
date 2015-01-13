@@ -125,9 +125,9 @@ int main(int argc, char * argv[]){
         buildings.push_back("library");
         buildings.push_back("student+centre,2");
       }
-      for(int i=0;i<buildings.size();i++){
+      for(int k=0;k<buildings.size();k++){
         make_http_request(url,from_date,to_date,from_time,to_time,
-        res[i][1].as<std::string>(),buildings[i],
+        res[i][1].as<std::string>(),buildings[k],
         token,output);
         std::vector<std::string> present_dates;
         if(strip_dates(output,present_dates)){
