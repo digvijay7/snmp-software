@@ -112,7 +112,7 @@ unsigned long fill_args(const map<string,string> & args, struct args_container &
     }
     else if(it->first == "location"){
       result |= ALOCATION;
-      std::vector<std::string> args = snmp::util::split(it->second,'+');
+      std::vector<std::string> args = snmp::util::split(it->second,',');
       if(args.size() == 2){
         params.set('b');
         params.set('f');
