@@ -114,6 +114,7 @@ unsigned long fill_args(const map<string,string> & args, struct args_container &
       result |= ALOCATION;
       std::vector<std::string> args = snmp::util::split(it->second,',');
       if(args.size() == 2){
+        std::cout<<args[0]<<" "<<args[1];
         params.set('b');
         params.set('f');
         params.building_str = args[0];
