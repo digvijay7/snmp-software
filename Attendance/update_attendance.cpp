@@ -19,7 +19,7 @@
 #include <boost/foreach.hpp>
 
 //#include <boost/asio.hpp>
-// To compile: g++ update_attendance.cpp -lcurlpp -lcurl -lpqxx -lpq -lboost_system -lboost_date_time 2>&1 -o update_attendance.out | more
+// To compile:  g++ -std=c++11 update_attendance.cpp -lcurlpp -lcurl -lpqxx -lpq -lboost_system -lboost_date_time 2>&1 -o update_attendance.out | more 
 
 bool make_http_request(
   std::string addr,
@@ -28,12 +28,13 @@ bool make_http_request(
   std::string from_time,
   std::string to_time,
   std::string mac,
+  std::string building,
   std::string token,
   std::string & result)
   {
   std::string url = addr + "/presence?mac=" + mac + "&from=" + from_date +
   "-" + from_time + "&to=" + to_date + "-" + to_time + "&format=yyyy-mm-dd-hh24:mi:ss" +
-  "&token=" + token;
+  "&location=" + building + "&token=" + token;
   std::cerr<<"Making query:"<<url<<std::endl;
   std::stringstream ss;
   try {
@@ -108,37 +109,43 @@ int main(int argc, char * argv[]){
     pqxx::result res = w.exec("SELECT m.rollno,mac,batch FROM ta_macs m join ta_info i on i.rollno = m.rollno;");
     w.commit();
     std::string output,from_time,to_time;
+    std::vector<std::string> buildings;
     for(int i=0;i<res.size();i++){
       if(res[i][2].as<std::string>().compare("phd") == 0){
         from_time = phd_from_time;
         to_time = phd_to_time;
+        buildings = {"academic"};
       }
       else{
         from_time = mtech_from_time;
         to_time = mtech_to_time;
+        buildings = {"academic","library","student centre,2"};
       }
-      make_http_request(url,from_date,to_date,from_time,to_time,res[i][1].as<std::string>(),
-      token,output);
-      std::vector<std::string> present_dates;
-      if(strip_dates(output,present_dates)){
-        for(int j=0;j<dates.size();j++){
-          std::string stmt;
-          if(std::find(present_dates.begin(),present_dates.end(),dates[j])!=present_dates.end()){
-            stmt = "SELECT * FROM  add_attendance(lower('" +
-            res[i][0].as<std::string>() + "'),'"+dates[j]+"','1');";
-          }
-          else{
+      for(int i=0;i<buildings.size();i++){
+        make_http_request(url,from_date,to_date,from_time,to_time,
+        res[i][1].as<std::string>(),buildings[i],
+        token,output);
+        std::vector<std::string> present_dates;
+        if(strip_dates(output,present_dates)){
+          for(int j=0;j<dates.size();j++){
+            std::string stmt;
+            if(std::find(present_dates.begin(),present_dates.end(),dates[j])!=present_dates.end()){
+              stmt = "SELECT * FROM  add_attendance(lower('" +
+              res[i][0].as<std::string>() + "'),'"+dates[j]+"','1');";
+            }
+            else{
              stmt = "SELECT * FROM add_attendance(lower('" +
             res[i][0].as<std::string>() + "'),'"+dates[j]+"','0');";
-          }
-          try{
-            pqxx::work w2(c);
-            std::cout<<"Making query:"<<stmt<<std::endl;
-            pqxx::result res2 = w2.exec(stmt);
-            w2.commit();
-          }
-          catch(std::exception &e){
-            std::cerr<<e.what()<<std::endl;
+            }
+            try{
+              pqxx::work w2(c);
+              std::cout<<"Making query:"<<stmt<<std::endl;
+              pqxx::result res2 = w2.exec(stmt);
+              w2.commit();
+            }
+            catch(std::exception &e){
+              std::cerr<<e.what()<<std::endl;
+            }
           }
         }
       }
