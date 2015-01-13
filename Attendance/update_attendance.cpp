@@ -19,7 +19,7 @@
 #include <boost/foreach.hpp>
 
 //#include <boost/asio.hpp>
-// To compile:  g++ -std=c++11 update_attendance.cpp -lcurlpp -lcurl -lpqxx -lpq -lboost_system -lboost_date_time 2>&1 -o update_attendance.out | more 
+// To compile:  g++ update_attendance.cpp -lcurlpp -lcurl -lpqxx -lpq -lboost_system -lboost_date_time 2>&1 -o update_attendance.out | more 
 
 bool make_http_request(
   std::string addr,
@@ -114,12 +114,16 @@ int main(int argc, char * argv[]){
       if(res[i][2].as<std::string>().compare("phd") == 0){
         from_time = phd_from_time;
         to_time = phd_to_time;
-        buildings = {"academic"};
+        buildings.clear();
+        buildings.push_back("academic");
       }
       else{
         from_time = mtech_from_time;
         to_time = mtech_to_time;
-        buildings = {"academic","library","student centre,2"};
+        buildings.clear();
+        buildings.push_back("academic");
+        buildings.push_back("library");
+        buildings.push_back("student centre,2");
       }
       for(int i=0;i<buildings.size();i++){
         make_http_request(url,from_date,to_date,from_time,to_time,
