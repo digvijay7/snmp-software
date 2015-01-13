@@ -123,7 +123,7 @@ int main(int argc, char * argv[]){
         buildings.clear();
         buildings.push_back("academic");
         buildings.push_back("library");
-        buildings.push_back("student centre,2");
+        buildings.push_back("student+centre,2");
       }
       for(int i=0;i<buildings.size();i++){
         make_http_request(url,from_date,to_date,from_time,to_time,
