@@ -40,6 +40,8 @@ public:
 private:
 	bool generic_query(const vector<string>& args, outputType type,  string& response,string query,int t);
   bool generic_query(string & response, string query);
+  bool generic_query(string & response, string query,const args_container & args);
+
   unsigned int query_type;
 };
 /* TO DO: Right now the url arguments are used to uniquely determine API correctness

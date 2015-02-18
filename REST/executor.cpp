@@ -16,6 +16,8 @@
 #include "strutil.hpp"
 #include <sha.h>
 
+#include "processor.hpp"
+
 using namespace ourapi;
 
 using boost::property_tree::ptree;
@@ -155,6 +157,33 @@ bool Executor::last(const args_container &args, outputType type, string & respon
   return Executor::generic_query(response,ss.str());
 }
 
+bool write_ap_std(pqxx::result & res, string & response,const args_container &args){
+  std::vector<std::vector<std::string> >  fro_tro;
+  Processor::make_fro_tro(res,fro_tro);
+	ptree root_t;
+  ptree children;
+  unsigned int size=0;
+  std::string limit_reached="no"; // default to no for now -- 18/02/2015
+  root_t.put("limit reached",limit_reached);
+  for(unsigned int rownum = 0 ;rownum < fro_tro.size(); rownum++){
+    if(fro_tro[rownum][0] == args.uid){
+      size++;
+      ptree child;
+      child.put("device_id",fro_tro[rownum][0]);
+      child.put("client_id",fro_tro[rownum][1]);
+      child.put("from",fro_tro[rownum][2]);
+      child.put("to",fro_tro[rownum][3]);
+      children.push_back(make_pair("",child));
+    }
+  }
+  root_t.put("size",size);
+  root_t.add_child("log entries",children);
+  std::stringstream ss;
+  write_json(ss,root_t);
+  response = ss.str();
+  return true;
+}
+
 bool write_last_std(pqxx::result & res, string & response){
 	ptree root_t;
   ptree children;
@@ -236,22 +265,23 @@ bool Executor::count_at(const args_container &args, outputType type, string & re
 Getting entries between two dates+times function
 ************************************************
 */
+
 bool Executor::std(const args_container &args, outputType type, string & response,const string & url){
   std::stringstream ss;
   if( url == "/client"){
     ss << "select * from client_std('" << args.from <<"','" << args.to << "','";
     ss << args.format << "',"<<args.uid<<")";
+    ss << " order by fro limit "<< MAX_ENTRIES + 1 << ";"; // +1 to check if limit exceeded
   }
   else if( url == "/ap"){
-    ss << "select * from device_std('" << args.from <<"','" << args.to << "','";
-    ss << args.format << "',"<<args.uid<<")";
+    ss << "select * from logs_std('" << args.from <<"','" << args.to << "','";
+    ss << args.format <<"');";
   }
   else { // Not yet implemented API or invalid API
     return false;
   }
-  ss << " order by fro limit "<< MAX_ENTRIES + 1 << ";"; // +1 to check if limit exceeded
   std::cout<<"Making query:"<<ss.str()<<std::endl;
-  return Executor::generic_query(response,ss.str());
+  return Executor::generic_query(response,ss.str(),args);
 }
 /*
 ************************************************
@@ -379,6 +409,11 @@ Function to execute SQL query
 *****************************
 */
 bool Executor::generic_query(string & response, const string query){
+  args_container args;
+  return Executor::generic_query(response,query,args);
+}
+
+bool Executor::generic_query(string & response, const string query,const args_container & args){
   try{
     pqxx::connection conn("dbname=mydb user=postgres password=admin hostaddr=127.0.0.1 port=5432");
     if(!conn.is_open()){
@@ -408,6 +443,9 @@ bool Executor::generic_query(string & response, const string query){
     }
     else if(query_type == VALID_API_PRESENCE or query_type == VALID_API_PRESENCE_LOCATION){
       return write_presence(res,response);
+    }
+    else if(query_type == VALID_API_AP_STD){
+      return write_ap_std(res,response,args);
     }
     else { // Write standard or last
       return write_last_std(res,response);
