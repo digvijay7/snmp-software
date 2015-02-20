@@ -114,7 +114,7 @@ namespace sn{
       entry.push_back(std::to_string(client_id));
       entry.push_back(get_time(users[client_id].connected_at()));
       entry.push_back(get_time(timestamp));
-      std::cout<<entry[0]<<entry[1]<<entry[2]<<entry[3]<<std::endl;
+      //std::cout<<entry[0]<<entry[1]<<entry[2]<<entry[3]<<std::endl;
       fro_tro.push_back(entry);
       users[client_id].got_connected_to(access_point);
       users[client_id].got_connected_at(timestamp);
@@ -201,7 +201,6 @@ namespace sn{
                                             // connected to
     for(vector<log>::iterator it = data.begin(); it!=data.end();it++){
       int status = get_change_in_status(users,it);
-      cout<<">"<<status<<endl;
       // Following line has to appear before any "update" functions
       int previous_access_point_id = users[it->cli_id].connected_to();
       // End - last comment
@@ -210,8 +209,18 @@ namespace sn{
       //update_access_points(access_points,it,status,
       //previous_access_point_id, fro_tro);
     }
-    // Finally all the users who are still connected need to be
-    // need to be added to fro and tro
+    // TBD: Currently connected users need to be stored pre hand.
+    // and iterated over one by one
+    for(int i=0;i<20000;i++){
+      if(users[i].is_connected()){
+        vector<string> entry;
+        entry.push_back(std::to_string(users[i].connected_to()));
+        entry.push_back(std::to_string(i));
+        entry.push_back(get_time(users[i].connected_at()));
+        entry.push_back("");
+        fro_tro.push_back(entry);
+      }
+    }
 
   }
 }
