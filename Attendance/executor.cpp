@@ -384,9 +384,49 @@ bool Executor::attendance_get_all(const args_container &args, outputType type, s
   std::stringstream oss;
   write_json(oss,root);
   response = oss.str();
-  return false;
+  return true;
 }
-
+/*
+******************************
+Exceptions for days
+******************************
+*/
+bool Executor::exception_get(const args_container &args, outputType type, string & response,const string & url){
+  std::stringstream ss,ss2;
+  ss << "SELECT * FROM get_positive_exceptions('";
+  ss << args.from <<"','"<<args.to<<"','";
+  ss << args.format <<"');";
+  ss2 << "SELECT * FROM get_negative_exceptions('";
+  ss2 << args.from <<"','"<<args.to<<"','";
+  ss2 << args.format <<"');";
+  pqxx::result res,res2;
+  if( !(generic_query_helper(ss.str(),res) and generic_query_helper(ss2.str(),res2))){
+    return false;
+  }
+  ptree root,positive_exceptions_t,negative_exceptions_t,child;
+  root.put("status","OK");
+  root.put("status code","0");
+  root.put("from",args.from);
+  root.put("to",args.to);
+  root.put("format",args.format);
+  for(unsigned int i=0;i<res.size();i++){
+    child.put("",res[i][0].as<std::string>());
+    positive_exceptions_t.push_back(make_pair("",child));
+  }
+  for(unsigned int i=0;i<res2.size();i++){
+    child.put("",res[i][0].as<std::string>());
+    negative_exceptions_t.push_back(make_pair("",child));
+  }
+  root.add_child("positive exceptions",positive_exceptions_t);
+  root.add_child("negative_exceptions",negative_exceptions_t);
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
+  return true;
+}
+bool Executor::exception_put(const args_container &args, outputType type, string & response,const string & url){
+  return true;
+}
 
 /*
 *****************************

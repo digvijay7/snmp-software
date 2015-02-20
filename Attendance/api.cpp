@@ -114,11 +114,17 @@ unsigned long url_type(const std::string & url){
   else if(url == "/ta/get"){
     return VALID_URL_TA_GET;
   }
+  else if(url == "/exception/get"){
+    return VALID_URL_EXCEPTION_GET;
+  }
   else if(url == "/ta/put"){
     return VALID_URL_TA_PUT;
   }
   else if(url == "/ta/del"){
     return VALID_URL_TA_DEL;
+  }
+  else if(url == "/exception/put"){
+    return VALID_URL_EXCEPTION_PUT;
   }
   return INVALID_URL;
 }
@@ -164,6 +170,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_ATTENDANCE_GET_ROLLNO){
     ret = _executor.attendance_get_rollno(argvals,type,response,url);
   }
+  else if(_executor.get_type() == VALID_API_EXCEPTION_GET){
+    ret = _executor.exception_get(argvals,type,response,url);
+  }
   else if(_executor.get_type() == VALID_API_TA_GET_ALL){
     ret = _executor.ta_get_all(argvals,type,response,url);
   }
@@ -175,6 +184,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   }
   else if(_executor.get_type() == VALID_API_TA_PUT_INFO){
     ret = _executor.ta_put_info(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_EXCEPTION_PUT){
+    ret = _executor.exception_put(argvals,type,response,url);
   }
   else if(_executor.get_type() == VALID_API_TA_PUT_MAC){
     ret = _executor.ta_put_mac(argvals,type,response,url);
