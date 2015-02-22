@@ -414,11 +414,11 @@ bool Executor::exception_get(const args_container &args, outputType type, string
     positive_exceptions_t.push_back(make_pair("",child));
   }
   for(unsigned int i=0;i<res2.size();i++){
-    child.put("",res[i][0].as<std::string>());
+    child.put("",res2[i][0].as<std::string>());
     negative_exceptions_t.push_back(make_pair("",child));
   }
   root.add_child("positive exceptions",positive_exceptions_t);
-  root.add_child("negative_exceptions",negative_exceptions_t);
+  root.add_child("negative exceptions",negative_exceptions_t);
   std::ostringstream oss;
   write_json(oss,root);
   response = oss.str();

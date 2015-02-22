@@ -114,7 +114,7 @@ unsigned long url_type(const std::string & url){
   else if(url == "/ta/get"){
     return VALID_URL_TA_GET;
   }
-  else if(url == "/exception/get"){
+  else if(url == "/exceptions/get"){
     return VALID_URL_EXCEPTION_GET;
   }
   else if(url == "/ta/put"){
@@ -123,7 +123,7 @@ unsigned long url_type(const std::string & url){
   else if(url == "/ta/del"){
     return VALID_URL_TA_DEL;
   }
-  else if(url == "/exception/put"){
+  else if(url == "/exceptions/put"){
     return VALID_URL_EXCEPTION_PUT;
   }
   return INVALID_URL;
