@@ -336,10 +336,11 @@ bool Executor::attendance_get_all(const args_container &args, outputType type, s
   ss << "SELECT * FROM all_attendance('";
   ss << args.from <<"','"<<args.to<<"','";
   ss << args.format <<"');";
-  pqxx::result res,res2;
+  pqxx::result res,res2,res3;
   ptree root,children;
   std::string stmt2 = "SELECT * FROM attendance_timings";
-  if(generic_query_helper(ss.str(),res) and generic_query_helper(stmt2,res2)){
+  std::string stmt3 = "SELECT rollno,batch FROM ta_info";
+  if(generic_query_helper(ss.str(),res) and generic_query_helper(stmt2,res2) and generic_query_helper(stmt3,res3)){
     root.put("status","OK");
     root.put("status code","0");
     root.put("from",args.from);
@@ -361,11 +362,19 @@ bool Executor::attendance_get_all(const args_container &args, outputType type, s
       status = res[i][2].as<std::string>();
       attendance[rollno].push_back(std::make_pair(date,status));
     }
+    std::map<std::string,std::string> rollno_batch;
+    std::string batch;
+    for(unsigned int i=0;i<res3.size();i++){
+      rollno = res3[i][0].as<std::string>();
+      batch = res3[i][1].as<std::string>();
+      rollno_batch[rollno] = batch;
+    }
     for(attendance_map::iterator it = attendance.begin();
         it != attendance.end();
         it++){
       ptree child1,child2,children2;
       child1.put("rollno",it->first);
+      child1.put("batch",rollno_batch[it->first]);
       for(unsigned int i=0 ; i< it->second.size() ; i++){
         if(it->second[i].second.compare("1") == 0){
           child2.put("",it->second[i].first);
