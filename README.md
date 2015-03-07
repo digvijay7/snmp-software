@@ -31,4 +31,8 @@ Features of the Project:
 8) Similarly, to get information about usage pattern of Enterprise Networks the Count API can be used.
 9) Supports Apps - the app will soon be supporting different aplications, such as live occupancy monitoring of the campus it is deployed in, taking attendance of students, finding last place of use of a wifi device, etc.
 
-
+TBD: Here is a quickly made, informal list of things which need to be added to the system.
+1) Fix security holes
+2) Add heartbeat to the system to detect whether system is functioning or not
+3) Add/Supplement/Migrate REST APIs using popular web frameworks like Django
+4) Git add scripts used to run programs round the clock, on linux machines using cronjobs
