@@ -82,26 +82,23 @@ $$;
 ALTER FUNCTION public.check_exception_present() OWNER TO postgres;
 
 --
--- Name: del_exception(text, text, text); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: del_exception(text, text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION del_exception(text, text, text) RETURNS void
+CREATE FUNCTION del_exception(text, text) RETURNS void
     LANGUAGE plpgsql
     AS $_$
 DECLARE
 del_date date;
 BEGIN
 del_date := to_timestamp($1,$2)::date;
-IF $3 = '0' THEN
-  DELETE FROM positive_exceptions p WHERE p.date = del_date;
-ELSIF $3 = '1' THEN
-  DELETE FROM negative_exceptions n WHERE n.date = del_date;
-END IF;
+DELETE FROM positive_exceptions p WHERE p.date = del_date;
+DELETE FROM negative_exceptions n WHERE n.date = del_date;
 END;
 $_$;
 
 
-ALTER FUNCTION public.del_exception(text, text, text) OWNER TO postgres;
+ALTER FUNCTION public.del_exception(text, text) OWNER TO postgres;
 
 --
 -- Name: del_ta(character varying); Type: FUNCTION; Schema: public; Owner: postgres
