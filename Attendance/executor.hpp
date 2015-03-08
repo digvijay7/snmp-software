@@ -35,6 +35,7 @@ public:
   bool attendance_put_time(const args_container &args, outputType type, string & response,const string & url);
   bool attendance_get_all(const args_container &args, outputType type, string & response,const string & url);
   bool exception_put(const args_container &args, outputType type, string & response,const string & url);
+  bool exception_del(const args_container &args, outputType type, string & response,const string & url);
   bool exception_get(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
@@ -71,6 +72,7 @@ private:
 #define VALID_URL_TA_DEL 512
 #define VALID_URL_EXCEPTION_PUT 65536
 #define VALID_URL_EXCEPTION_GET 2097152
+#define VALID_URL_EXCEPTION_DEL 4194304
 #define INVALID_URL 0
 #define NO_ARGS 0
 #define VALID_API_UID 4128 // API to get UID
@@ -89,6 +91,7 @@ private:
 #define VALID_API_TA_PUT_MAC (VALID_URL_TA_PUT + AROLLNO + AMAC)
 #define VALID_API_EXCEPTION_PUT (VALID_URL_EXCEPTION_PUT +  AAT + AFORMAT + ATYPE)
 #define VALID_API_EXCEPTION_GET (VALID_URL_EXCEPTION_GET +  AFROM + ATO + AFORMAT)
+#define VALID_API_EXCEPTION_DEL (VALID_URL_EXCEPTION_DEL +  AAT + AFORMAT + ATYPE)
 #define MAX_ENTRIES 1000
 
 struct args_container{

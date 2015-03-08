@@ -434,9 +434,39 @@ bool Executor::exception_get(const args_container &args, outputType type, string
   return true;
 }
 bool Executor::exception_put(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT * FROM put_exception('"+args.at+"','"+args.format+"','"+args.type+"');";
+  pqxx::result res;
+  ptree root;
+  if(generic_query_helper(stmt,res)){
+    root.put("status","Entry added");
+    root.put("status code","0");
+  }
+  else{
+    root.put("status","Error in adding");
+    root.put("status code","1");
+  }
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
   return true;
 }
-
+bool Executor::exception_del(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT * FROM del_exception('"+args.at+"','"+args.format+"','"+args.type+"');";
+  pqxx::result res;
+  ptree root;
+  if(generic_query_helper(stmt,res)){
+    root.put("status","Entry removed");
+    root.put("status code","0");
+  }
+  else{
+    root.put("status","Error in removing");
+    root.put("status code","1");
+  }
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
+  return true;
+}
 /*
 *****************************
 Function to execute SQL query

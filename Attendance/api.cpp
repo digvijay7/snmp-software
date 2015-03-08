@@ -123,9 +123,13 @@ unsigned long url_type(const std::string & url){
   else if(url == "/ta/del"){
     return VALID_URL_TA_DEL;
   }
-  else if(url == "/exceptions/put"){
+  else if(url == "/exception/put"){
     return VALID_URL_EXCEPTION_PUT;
   }
+  else if(url == "/exception/del"){
+    return VALID_URL_EXCEPTION_DEL;
+  }
+
   return INVALID_URL;
 }
 
@@ -206,6 +210,10 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_TA_MAC_DEL){
     ret = _executor.ta_mac_del(argvals,type,response,url);
   }
+  else if(_executor.get_type() == VALID_API_EXCEPTION_DEL){
+    ret = _executor.exception_del(argvals,type,response,url);
+  }
+
   else {
     response = "Inavlid API";
   }
