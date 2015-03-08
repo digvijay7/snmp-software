@@ -96,7 +96,7 @@ private:
 
 struct args_container{
   string type;
-  string name,from,to,format,last,mac,at,rollno,email,batch,present;
+  string name,from,to,format,last,mac,at,rollno,email,batch,present,atype;
   args_container(){
     present = "0";
   }

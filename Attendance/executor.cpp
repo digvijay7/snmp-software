@@ -434,7 +434,7 @@ bool Executor::exception_get(const args_container &args, outputType type, string
   return true;
 }
 bool Executor::exception_put(const args_container &args, outputType type, string & response,const string & url){
-  std::string stmt = "SELECT * FROM put_exception('"+args.at+"','"+args.format+"','"+args.type+"');";
+  std::string stmt = "SELECT * FROM put_exception('"+args.at+"','"+args.format+"','"+args.atype+"');";
   pqxx::result res;
   ptree root;
   if(generic_query_helper(stmt,res)){
@@ -451,7 +451,7 @@ bool Executor::exception_put(const args_container &args, outputType type, string
   return true;
 }
 bool Executor::exception_del(const args_container &args, outputType type, string & response,const string & url){
-  std::string stmt = "SELECT * FROM del_exception('"+args.at+"','"+args.format+"','"+args.type+"');";
+  std::string stmt = "SELECT * FROM del_exception('"+args.at+"','"+args.format+"','"+args.atype+"');";
   pqxx::result res;
   ptree root;
   if(generic_query_helper(stmt,res)){

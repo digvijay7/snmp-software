@@ -72,7 +72,7 @@ unsigned long fill_args(const map<string,string> & args, struct args_container &
     }
     else if(it->first == "type"){
       result |= ATYPE;
-      std::string type = it->second;
+      params.atype = it->second;
     }
     else if(it->first == "email"){
       result |= AEMAIL;
