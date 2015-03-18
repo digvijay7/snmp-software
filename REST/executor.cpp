@@ -35,7 +35,7 @@ Executor::Executor()
 
 bool generic_query_helper(const std::string & stmt,pqxx::result & res){
   try{
-    pqxx::connection conn("dbname=attendance user=postgres password=admin hostaddr=127.0.0.1 port=5432");
+    pqxx::connection conn("dbname=mydb user=postgres password=admin hostaddr=127.0.0.1 port=5432");
     if(!conn.is_open()){
       return false;
     }
