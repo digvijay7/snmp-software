@@ -307,7 +307,7 @@ bool Executor::count_at(const args_container &args, outputType type, string & re
         for(unsigned int a=0;a<col_names.size()-1;a++){ // makes assumption that the building,floor,etc. names
                                                // appear in the beginning!
           std::string col = col_names[a];
-          if(res2[j][col] != res1[i][col]){
+          if(res2[j][col].as<std::string>() != res1[i][col].as<std::string>()){
             flag=false;
             break;
           }
