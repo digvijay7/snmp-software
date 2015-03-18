@@ -39,6 +39,7 @@ bool generic_query_helper(const std::string & stmt,pqxx::result & res){
     if(!conn.is_open()){
       return false;
     }
+    std::cout<<"Making Query: "<<stmt<<std::endl;
     pqxx::work w(conn);
     res = w.exec(stmt);
     w.commit();
@@ -284,14 +285,19 @@ bool Executor::count_at(const args_container &args, outputType type, string & re
   ss3 << ss2.str() << ",client_id ORDER BY "<< ss2.str()<<",client_id;";
 
   pqxx::result res1,res2;
-  if(!generic_query_helper(ss.str(),res1) or !generic_query_helper(ss3.str(),res2)){
+  if(!generic_query_helper(ss.str(),res1)){ 
     return false;
+  }
+  if(args.uids){
+    if(!generic_query_helper(ss3.str(),res2)){
+      return false;
+    }
   }
   ptree root_t, children;
   root_t.put("size",res1.size());
   std::vector<std::string> col_names;
   if(res1.size() > 0){
-    for(pqxx::result::tuple::size_type j=0;j<res1.size();j++){
+    for(pqxx::result::tuple::size_type j=0;j<res1[0].size();j++){
       std::string col(res1[0][j].name(),strlen((res1[0][j]).name()));
       col_names.push_back(col);
     }
@@ -301,8 +307,8 @@ bool Executor::count_at(const args_container &args, outputType type, string & re
     for(pqxx::result::tuple::size_type j=0;j<res1[i].size();j++){
       child.put(col_names[j],res1[i][j]);
     }
-    for(size_t j=0;j<res2.size();j++){
-      for(pqxx::result::tuple::size_type k=0;k<res2[j].size();k++){
+    if(args.uids){
+      for(size_t j=0;j<res2.size();j++){
         bool flag=true;
         for(unsigned int a=0;a<col_names.size()-1;a++){ // makes assumption that the building,floor,etc. names
                                                // appear in the beginning!
@@ -311,23 +317,21 @@ bool Executor::count_at(const args_container &args, outputType type, string & re
             flag=false;
             break;
           }
-          if(flag){
-            ptree uid;
-            uid.put("",res2[j][k]);
-            uids.push_back(make_pair("",uid));
-          }
+        }
+        if(flag){
+          ptree uid;
+          uid.put("",res2[j]["client_id"]);
+          uids.push_back(make_pair("",uid));
         }
       }
-    }
-    if(args.uids){
       child.add_child("uids",uids);
     }
     children.push_back(make_pair("",child));
   }
   root_t.add_child("occupancy_information",children);
   std::stringstream ss4;
-  write_json(ss,root_t);
-  response = ss.str();
+  write_json(ss4,root_t);
+  response = ss4.str();
   return true;
 
 }
