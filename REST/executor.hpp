@@ -102,9 +102,9 @@ struct args_container{
   unsigned long type;
   int access;
   string uid,from,to,format,last,mac,at,rollno,email,appid,building_str,floor_str;
-  bool building,floor,wing,room;
+  bool building,floor,wing,room,uids;
   args_container(){
-    building = floor = wing = room = false;
+    building = floor = wing = room = uids = false;
   }
   bool set(char c){
     if(c == 'b'){
@@ -118,6 +118,9 @@ struct args_container{
     }
     else if( c == 'r'){
       room = true;
+    }
+    else if( c == 'u'){
+      uids = true;
     }
     else {
       return false;

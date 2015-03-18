@@ -30,6 +30,27 @@ std::vector<std::string> location_type={"b","f","w","r"};
 Executor::Executor()
 {
 }
+
+// Function to execute SQL statements which returns pqxx::result
+
+bool generic_query_helper(const std::string & stmt,pqxx::result & res){
+  try{
+    pqxx::connection conn("dbname=attendance user=postgres password=admin hostaddr=127.0.0.1 port=5432");
+    if(!conn.is_open()){
+      return false;
+    }
+    pqxx::work w(conn);
+    res = w.exec(stmt);
+    w.commit();
+    return true;
+  }
+  catch(std::exception &e){
+    std::cerr<<e.what()<<std::endl;
+  }
+  return false;
+}
+
+
 /*
 *******************************************************************
 Sudo functions - Only functions which allow writing to the database
@@ -257,7 +278,58 @@ bool Executor::count_at(const args_container &args, outputType type, string & re
   ss << "','"<<args.format<<"') join label on device_id = uid GROUP BY ";
   ss << ss2.str() << " ORDER BY "<<ss2.str()<< ";";
   std::cout << "Making Query:"<<ss.str()<<std::endl;
-  return Executor::generic_query(response,ss.str());
+  std::stringstream ss3;
+  ss3 << "SELECT "<<ss2.str()<<",client_id FROM at_all_uids('"<<args.at<<"','"<<args.format<<"') ";
+  ss3 << "join label on device_id = uid GROUP BY";
+  ss3 << ss2.str() << "ORDER BY "<< ss2.str()<<";";
+
+  pqxx::result res1,res2;
+  if(!generic_query_helper(ss.str(),res1) or !generic_query_helper(ss3.str(),res2)){
+    return false;
+  }
+  ptree root_t, children;
+  root_t.put("size",res1.size());
+  std::vector<std::string> col_names;
+  if(res1.size() > 0){
+    for(pqxx::result::tuple::size_type j=0;j<res1.size();j++){
+      std::string col(res1[0][j].name(),strlen((res1[0][j]).name()));
+      col_names.push_back(col);
+    }
+  }
+  for(size_t i=0;i<res1.size();i++){
+    ptree child,uids;
+    for(pqxx::result::tuple::size_type j=0;j<res1[i].size();j++){
+      child.put(col_names[j],res1[i][j]);
+    }
+    for(size_t j=0;j<res2.size();j++){
+      for(pqxx::result::tuple::size_type k=0;k<res2[j].size();k++){
+        bool flag=true;
+        for(unsigned int a=0;a<col_names.size()-1;a++){ // makes assumption that the building,floor,etc. names
+                                               // appear in the beginning!
+          std::string col = col_names[a];
+          if(res2[j][col] != res1[i][col]){
+            flag=false;
+            break;
+          }
+          if(flag){
+            ptree uid;
+            uid.put("",res2[j][k]);
+            uids.push_back(make_pair("",uid));
+          }
+        }
+      }
+    }
+    if(args.uids){
+      child.add_child("uids",uids);
+    }
+    children.push_back(make_pair("",child));
+  }
+  root_t.add_child("occupancy_information",children);
+  std::stringstream ss4;
+  write_json(ss,root_t);
+  response = ss.str();
+  return true;
+
 }
 
 /*
