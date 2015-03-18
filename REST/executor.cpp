@@ -281,7 +281,7 @@ bool Executor::count_at(const args_container &args, outputType type, string & re
   std::stringstream ss3;
   ss3 << "SELECT "<<ss2.str()<<",client_id FROM at_all_uids('"<<args.at<<"','"<<args.format<<"') ";
   ss3 << "join label on device_id = uid GROUP BY ";
-  ss3 << ss2.str() << " ORDER BY "<< ss2.str()<<";";
+  ss3 << ss2.str() << ",client_id ORDER BY "<< ss2.str()<<",client_id;";
 
   pqxx::result res1,res2;
   if(!generic_query_helper(ss.str(),res1) or !generic_query_helper(ss3.str(),res2)){
