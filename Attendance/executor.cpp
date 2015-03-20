@@ -308,9 +308,10 @@ bool Executor::attendance_put(const args_container &args, outputType type, strin
   "','"+args.at+"','"+args.format+"','"+args.present+"');";
   std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+","+args.at+","+args.present+
   ","+args.format+"','Attendance Put');";
-  pqxx::result res;
+  pqxx::result res,res2;
   ptree root;
   if(generic_query_helper(stmt,res)){
+    generic_query_helper(stmt2,res2);
     root.put("status","Entry added");
     root.put("status code","0");
   }
