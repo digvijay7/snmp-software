@@ -183,9 +183,12 @@ bool Executor::ta_get_rollno(const args_container &args, outputType type, string
 bool Executor::ta_put_info(const args_container &args, outputType type, string & response,const string & url){
   std::string stmt = "SELECT * FROM put_ta('"+args.rollno+"','"+
   args.email+"','"+args.name+"','"+args.batch+"');";
-  pqxx::result res;
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+
+  ","+args.email+","+args.name+","+args.batch+"','TA Put Info');";
+  pqxx::result res,res2;
   ptree root;
   if(generic_query_helper(stmt,res)){
+    generic_query_helper(stmt2,res2);
     root.put("status","Entry added");
     root.put("status code","0");
   }
@@ -200,9 +203,11 @@ bool Executor::ta_put_info(const args_container &args, outputType type, string &
 }
 bool Executor::ta_del(const args_container &args, outputType type, string & response,const string & url){
   std::string stmt = "SELECT * FROM del_ta('"+args.rollno+"');";
-  pqxx::result res;
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+"','TA Delete');";
+  pqxx::result res,res2;
   ptree root;
   if(generic_query_helper(stmt,res)){
+    generic_query_helper(stmt2,res2);
     root.put("status","Entry deleted");
     root.put("status code","0");
   }
@@ -217,9 +222,11 @@ bool Executor::ta_del(const args_container &args, outputType type, string & resp
 }
 bool Executor::ta_mac_del(const args_container &args, outputType type, string & response,const string & url){
   std::string stmt = "SELECT * FROM del_ta_mac('"+args.rollno+"','"+args.mac+"');";
-  pqxx::result res;
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+","+args.mac+"','MAC Delete');";
+  pqxx::result res,res2;
   ptree root;
   if(generic_query_helper(stmt,res)){
+    generic_query_helper(stmt2,res2);
     root.put("status","Entry deleted");
     root.put("status code","0");
   }
@@ -235,9 +242,11 @@ bool Executor::ta_mac_del(const args_container &args, outputType type, string & 
 
 bool Executor::ta_put_mac(const args_container &args, outputType type, string & response,const string & url){
   std::string stmt = "SELECT * FROM put_mac('"+args.rollno+"','"+args.mac+"');";
-  pqxx::result res;
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+","+args.mac+"','TA Delete');";
+  pqxx::result res,res2;
   ptree root;
   if(generic_query_helper(stmt,res)){
+    generic_query_helper(stmt2,res2);
     root.put("status","Entry added");
     root.put("status code","0");
   }
@@ -297,6 +306,8 @@ bool Executor::attendance_get_rollno(const args_container &args, outputType type
 bool Executor::attendance_put(const args_container &args, outputType type, string & response,const string & url){
   std::string stmt = "SELECT  * FROM update_attendance('"+args.rollno+
   "','"+args.at+"','"+args.format+"','"+args.present+"');";
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+","+args.at+","+args.present+
+  ","+args.format+"','Attendance Put');";
   pqxx::result res;
   ptree root;
   if(generic_query_helper(stmt,res)){
@@ -397,6 +408,34 @@ bool Executor::attendance_get_all(const args_container &args, outputType type, s
 }
 /*
 ******************************
+Functions for logging
+******************************
+*/
+
+bool Executor::log_get(const args_container &args, outputType type, string & response,const string & url){
+  return true;
+}
+bool Executor::log_put(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT * FROM put_log('"+args.email+"','"+args.type+"');";
+  pqxx::result res;
+  ptree root;
+/*  if(generic_query_helper(stmt,res)){
+    root.put("status","Log added");
+    root.put("status code","0");
+  }
+  else{
+    root.put("status","Error in logging");
+    root.put("status code","1");
+  }
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
+  */
+  return true;
+}
+
+/*
+******************************
 Exceptions for days
 ******************************
 */
@@ -435,9 +474,12 @@ bool Executor::exception_get(const args_container &args, outputType type, string
 }
 bool Executor::exception_put(const args_container &args, outputType type, string & response,const string & url){
   std::string stmt = "SELECT * FROM put_exception('"+args.at+"','"+args.format+"','"+args.atype+"');";
-  pqxx::result res;
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.at+
+  ","+args.atype+","+args.format+"','Exception Put');";
+  pqxx::result res,res2;
   ptree root;
   if(generic_query_helper(stmt,res)){
+    generic_query_helper(stmt2,res2);
     root.put("status","Entry added");
     root.put("status code","0");
   }
@@ -452,9 +494,11 @@ bool Executor::exception_put(const args_container &args, outputType type, string
 }
 bool Executor::exception_del(const args_container &args, outputType type, string & response,const string & url){
   std::string stmt = "SELECT * FROM del_exception('"+args.at+"','"+args.format+"');";
-  pqxx::result res;
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.at+"','Exception Delete');";
+  pqxx::result res,res2;
   ptree root;
   if(generic_query_helper(stmt,res)){
+    generic_query_helper(stmt2,res2);
     root.put("status","Entry removed");
     root.put("status code","0");
   }

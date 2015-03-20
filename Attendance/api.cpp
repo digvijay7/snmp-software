@@ -94,6 +94,10 @@ unsigned long fill_args(const map<string,string> & args, struct args_container &
       result |= AAT;
       params.at = it->second;
     }
+    else if(it->first == "username"){
+      result |= AUSERNAME;
+      params.username = it->second;
+    }
 
     it++;
   }
@@ -128,6 +132,12 @@ unsigned long url_type(const std::string & url){
   }
   else if(url == "/exception/del"){
     return VALID_URL_EXCEPTION_DEL;
+  }
+  else if(url == "/logs/get"){
+    return VALID_URL_LOG_GET;
+  }
+  else if(url == "/log/put"){
+    return VALID_URL_LOG_PUT;
   }
 
   return INVALID_URL;
@@ -213,7 +223,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   else if(_executor.get_type() == VALID_API_EXCEPTION_DEL){
     ret = _executor.exception_del(argvals,type,response,url);
   }
-
+  else if(_executor.get_type() == VALID_API_LOG_GET){
+    ret = _executor.log_get(argvals,type,response,url);
+  }
   else {
     response = "Inavlid API";
   }
