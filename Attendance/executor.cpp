@@ -426,7 +426,7 @@ bool Executor::log_get(const args_container &args, outputType type, string & res
     root.put("status code","0");
     for(size_t i=0;i<res.size();i++){
       ptree child;
-      for(pqxx::result::tuple::size_type j=0;j<=res[i].size();j++){
+      for(pqxx::result::tuple::size_type j=0;j<res[i].size();j++){
         child.put(res[i][j].name(),res[i][j]);
       }
       children.push_back(make_pair("",child));
