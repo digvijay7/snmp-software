@@ -414,6 +414,28 @@ Functions for logging
 */
 
 bool Executor::log_get(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT * from get_log('"+args.from+"','"+args.to+"','"+args.format+"');";
+  pqxx::result res;
+  ptree root,children;
+  if(!generic_query_helper(stmt,res)){
+    root.put("status","Error in retrieving logs from DB");
+    root.put("status code","1");
+  }
+  else{
+    root.put("status","Logs retreived");
+    root.put("status code","0");
+    for(size_t i=0;i<res.size();i++){
+      ptree child;
+      for(pqxx::result::tuple::size_type j=0;j<=res[i].size();j++){
+        child.put(res[i][j].name(),res[i][j]);
+      }
+      children.push_back(make_pair("",child));
+    }
+    root.add_child("logs",children);
+  }
+  std::stringstream oss;
+  write_json(oss,root);
+  response = oss.str();
   return true;
 }
 bool Executor::log_put(const args_container &args, outputType type, string & response,const string & url){
