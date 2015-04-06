@@ -35,6 +35,7 @@ public:
   bool loc_deregister(const args_container &args, outputType type, string & response,const string & url, char* ipAddress);
   bool presence(const args_container &args, outputType type, string & response,const string & url);
   bool presence_location(const args_container &args, outputType type, string & response,const string & url);
+  bool label_get(const args_container &args, outputType type, string & response,const string & url);
   void set_type(unsigned int q) {query_type = q;};
   unsigned int get_type() {return query_type;};
 private:
@@ -78,6 +79,7 @@ private:
 #define VALID_URL_REGISTER 4194304
 #define VALID_URL_DEREGISTER 8388608 
 #define VALID_URL_PRESENCE 1048576
+#define VALID_URL_LABEL_GET 16777216
 #define INVALID_URL 0
 #define NO_ARGS 0
 //TBD: Write all valid_apis along with their argument/url macros (in comment form)
@@ -96,6 +98,7 @@ private:
 #define VALID_API_DEREGISTER 8388608
 #define VALID_API_PRESENCE ( VALID_URL_PRESENCE + AMAC + AFROM + ATO + AFORMAT)
 #define VALID_API_PRESENCE_LOCATION ( VALID_API_PRESENCE + ALOCATION)
+#define VALID_API_LABEL_GET (VALID_URL_LABEL_GET )
 #define MAX_ENTRIES 1000
 
 struct args_container{

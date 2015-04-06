@@ -167,6 +167,9 @@ unsigned long url_type(const std::string & url){
   else if(url == "/su/put"){
     return VALID_URL_SU;
   }
+  else if(url == "/label/get"){
+    return VALID_URL_LABEL_GET;
+  }
   else if(url == "/presence"){
     return VALID_URL_PRESENCE;
   }
@@ -244,6 +247,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   }
   else if(_executor.get_type() == VALID_API_PRESENCE_LOCATION){
     ret = _executor.presence_location(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_LABEL_GET){
+    ret = _executor.label_get(argvals,type,response,url);
   }
   else if(_executor.get_type() == VALID_API_REGISTER){
     ret = _executor.loc_register(argvals,type,response,url, ipAddress);

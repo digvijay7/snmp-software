@@ -430,6 +430,45 @@ bool write_live(pqxx::result & res, std::string & response){
 }
 /*
 ************************************************************
+Function for Getting/Putting Labels associated with APs
+************************************************************
+*/
+bool Executor::label_get(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt = "SELECT * FROM label";
+  ptree root,children;
+  pqxx::result res;
+  if(!generic_query_helper(stmt,res)){
+    root.put("status","Getting labels failed");
+    root.put("status code","1");
+    return true;
+  }
+  else{
+    root.put("status","Getting labels succeded");
+    root.put("status code","0");
+  }
+  std::vector<std::string> col_names;
+  if(res.size() > 0){
+    for(pqxx::result::tuple::size_type j=0;j<res[0].size();j++){
+      std::string col(res[0][j].name(),strlen((res[0][j]).name()));
+      col_names.push_back(col);
+    }
+  }
+  for(unsigned int i=0;i<res.size();i++){
+    ptree child;
+    for(pqxx::result::tuple::size_type j=0;j<res[i].size();j++){
+      child.put(col_names[j],res[i][j]);
+    }
+    children.push_back(make_pair("",child));
+  }
+  root.add_child("labels",children);
+  std::stringstream oss;
+  write_json(oss,root);
+  response = oss.str();
+  return true;
+}
+
+/*
+************************************************************
 Function to Register and Deregister for the Location Service
 ************************************************************
 */
