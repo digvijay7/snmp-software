@@ -132,6 +132,27 @@ $_$;
 ALTER FUNCTION public.at_all_count(in_from character varying, in_format character varying) OWNER TO postgres;
 
 --
+-- Name: at_all_uids(character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION at_all_uids(in_from character varying, in_format character varying) RETURNS TABLE(device_id integer, client_id integer)
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  from_time timestamp;
+  to_time timestamp;
+  d_id logs.device_id%TYPE;
+BEGIN
+  from_time := to_timestamp($1,$2) - interval '2 hours';
+  to_time := to_timestamp($1,$2);
+  RETURN QUERY SELECT L.device_id,L.client_id from logs L where (L.client_id,L.ts) in (select U.client_id,max(ts) from logs U where ts >= from_time AND ts <= to_time group by U.client_id) and L.type = 1 order by L.device_id,L.client_id;
+END
+$_$;
+
+
+ALTER FUNCTION public.at_all_uids(in_from character varying, in_format character varying) OWNER TO postgres;
+
+--
 -- Name: attendance(character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -205,6 +226,53 @@ $$;
 
 
 ALTER FUNCTION public.client_last(c_id integer) OWNER TO postgres;
+
+--
+-- Name: client_last_building(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION client_last_building(c_id integer) RETURNS TABLE(device_id integer, client_id integer, fro timestamp without time zone, tro timestamp without time zone, building text, floor text, wing text, room text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  from_time varchar;
+  to_time varchar;
+  format varchar;
+  access int;
+BEGIN
+  format := 'YYYY-MM-DD HH24:MI:SS';
+  from_time := to_char(now() - interval '2 hour',format);
+  to_time := to_char(now(),format);
+  SELECT u.access INTO access FROM uid u
+  WHERE u.uid = c_id;
+  IF access = 1 THEN
+    RETURN QUERY WITH s(s) AS(
+      values ('')
+    )
+    SELECT cstd.device_id,cstd.client_id,cstd.fro,cstd.tro,s,s,s,s from client_std(from_time,to_time,format,c_id) cstd join label l on (cstd.device_id = l.uid) join s on (1=1);
+  ELSIF access = 2 THEN
+    RETURN QUERY WITH s(s) AS(
+      values ('')
+    )
+    SELECT cstd.device_id,cstd.client_id,cstd.fro,cstd.tro,cast(l.building as text),s,s,s from client_std(from_time,to_time,format,c_id) cstd join label l on (cstd.device_id = l.uid) join s on (1=1);
+  ELSIF access = 3 THEN
+    RETURN QUERY WITH s(s) AS(
+      values ('')
+    )
+    SELECT cstd.device_id,cstd.client_id,cstd.fro,cstd.tro,cast(l.building as text),cast(l.floor as text),s,s from client_std(from_time,to_time,format,c_id) cstd join label l on (cstd.device_id = l.uid) join s on (1=1);
+  ELSIF access = 4 THEN
+    RETURN QUERY WITH s(s) AS(
+      values ('')
+    )
+    SELECT cstd.device_id,cstd.client_id,cstd.fro,cstd.tro,cast(l.building as text),cast(l.floor as text),cast(l.wing as text),s from client_std(from_time,to_time,format,c_id) cstd join label l on (cstd.device_id = l.uid) join s on (1=1);
+  ELSIF access = 5 THEN
+    RETURN QUERY SELECT cstd.device_id,cstd.client_id,cstd.fro,cstd.tro,cast(l.building as text),cast(l.floor as text),cast(l.wing as text),cast(l.room as text) from client_std(from_time,to_time,format,c_id) cstd join label l on (cstd.device_id = l.uid);
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION public.client_last_building(c_id integer) OWNER TO postgres;
 
 --
 -- Name: client_std(character varying, character varying, character varying, integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -337,7 +405,7 @@ BEGIN
 
   FOR row2.device_id,row2.client_id,row2.ts,row2.label,row2.type IN SELECT l.device_id,l.client_id,l.ts,l.label,l.type
   FROM logs l LEFT JOIN uid u ON (l.client_id = u.uid)
-  WHERE id = l.device_id and l.ts >= from_time and l.ts <= to_time and u.access >= 1
+  WHERE id = l.device_id and l.ts >= from_time and l.ts <= to_time and u.access >= 0
   ORDER BY l.client_id,l.ts 
   LOOP
     IF flag = 0 THEN
@@ -560,6 +628,26 @@ $$;
 ALTER FUNCTION public.log_insert(tdevice character varying, tclient character varying, tts timestamp without time zone, tlabel character varying, ttype integer) OWNER TO postgres;
 
 --
+-- Name: logs_std(character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION logs_std(character varying, character varying, character varying) RETURNS TABLE(device_id integer, client_id integer, ts timestamp without time zone, type integer)
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  from_time timestamp;
+  to_time timestamp;
+BEGIN
+  from_time := to_timestamp($1,$3);
+  to_time := to_timestamp($2,$3);
+  RETURN QUERY SELECT l.device_id,l.client_id,l.ts,l.type FROM logs l WHERE l.ts >= from_time and l.ts <= to_time ORDER BY l.ts,l.device_id,l.client_id;
+END
+$_$;
+
+
+ALTER FUNCTION public.logs_std(character varying, character varying, character varying) OWNER TO postgres;
+
+--
 -- Name: no_access_device_std(character varying, character varying, character varying, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -636,7 +724,7 @@ CREATE FUNCTION presence(character varying, character varying, character varying
   to_time := to_timestamp($3,$4);
   from_date := from_time::date;
   to_date := to_time::date;
-  SELECT uid INTO id FROM uid WHERE hash = decode($1,'hex') and access >= 2;
+  SELECT uid INTO id FROM uid WHERE hash = decode($1,'hex');
   RETURN QUERY WITH academic_ids as(
   SELECT uid  from label where building ='Academic'
   )
@@ -651,6 +739,52 @@ CREATE FUNCTION presence(character varying, character varying, character varying
 
 
 ALTER FUNCTION public.presence(character varying, character varying, character varying, character varying) OWNER TO postgres;
+
+--
+-- Name: presence_location(character varying, character varying, character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION presence_location(character varying, character varying, character varying, character varying, character varying, character varying) RETURNS TABLE(dates date)
+    LANGUAGE plpgsql
+    AS $_$
+  DECLARE
+  from_date date;
+  to_date date;
+  from_time timestamp;
+  to_time timestamp;
+  id int;
+  BEGIN
+  from_time := to_timestamp($2,$4);
+  to_time := to_timestamp($3,$4);
+  from_date := from_time::date;
+  to_date := to_time::date;
+  SELECT uid INTO id FROM uid WHERE hash = decode($1,'hex');
+  IF lower($6) = 'any' THEN
+    RETURN QUERY WITH academic_ids as(
+    SELECT uid  from label where lower(building) =lower($5)
+    )
+    SELECT ts::date FROM logs JOIN uid ON uid = client_id
+    WHERE ts::date >= from_date AND ts::date <= to_date
+    AND client_id = id
+    AND ts::time >= from_time::time  AND ts::time <= to_time::time
+    AND device_id IN (select * from academic_ids)
+    GROUP BY ts::date ORDER BY ts::date;
+  ELSE
+    RETURN QUERY WITH academic_ids as(
+    SELECT uid  from label where lower(building) =lower($5) and lower(floor) = lower($6)
+    )
+    SELECT ts::date FROM logs JOIN uid ON uid = client_id
+    WHERE ts::date >= from_date AND ts::date <= to_date
+    AND client_id = id
+    AND ts::time >= from_time::time  AND ts::time <= to_time::time
+    AND device_id IN (select * from academic_ids)
+    GROUP BY ts::date ORDER BY ts::date;
+  END IF;
+  END
+  $_$;
+
+
+ALTER FUNCTION public.presence_location(character varying, character varying, character varying, character varying, character varying, character varying) OWNER TO postgres;
 
 --
 -- Name: service_insert(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -790,7 +924,7 @@ CREATE FUNCTION update_access(integer, integer) RETURNS integer
 DECLARE
 rcount int;
 BEGIN
-IF $2 < 2 and $2 >=0 THEN
+IF $2 <= 5 and $2 >=0 THEN
 UPDATE uid SET access = $2 where uid = $1;
 END IF;
 GET DIAGNOSTICS rcount := ROW_COUNT;
