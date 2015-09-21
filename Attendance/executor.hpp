@@ -34,6 +34,7 @@ public:
   bool attendance_put(const args_container &args, outputType type, string & response,const string & url);
   bool attendance_put_time(const args_container &args, outputType type, string & response,const string & url);
   bool attendance_get_all(const args_container &args, outputType type, string & response,const string & url);
+  bool attendance_update(const args_container &args, outputType type, string & response,const string & url);
   bool exception_put(const args_container &args, outputType type, string & response,const string & url);
   bool exception_del(const args_container &args, outputType type, string & response,const string & url);
   bool exception_get(const args_container &args, outputType type, string & response,const string & url);
@@ -69,6 +70,7 @@ private:
 #define VALID_URL_AUTH 256
 #define VALID_URL_ATTENDANCE_GET 1048576
 #define VALID_URL_ATTENDANCE_PUT 2048
+#define VALID_URL_ATTENDANCE_UPDATE 33554432
 #define VALID_URL_TA_GET 4096
 #define VALID_URL_TA_PUT 8192
 #define VALID_URL_TA_DEL 512
@@ -86,6 +88,7 @@ private:
 #define VALID_API_ATTENDANCE_PUT_TIME (VALID_URL_ATTENDANCE_PUT + ABATCH + AFROM + ATO )
 #define VALID_API_ATTENDANCE_PUT (VALID_URL_ATTENDANCE_PUT + AROLLNO + AAT + AFORMAT + APRESENT +AUSERNAME)
 #define VALID_API_ATTENDANCE_GET_ALL 1048590 //(VALID_URL_ATTENDANCE_GET + AFROM + ATO + AFORMAT)
+#define VALID_API_ATTENDANCE_UPDATE (VALID_URL_ATTENDANCE_UPDATE + AFROM + ATO + AFORMAT + AUSERNAME)
 #define VALID_API_TA_GET_EMAIL (VALID_URL_TA_GET + AEMAIL)
 #define VALID_API_TA_GET_ROLLNO (VALID_URL_TA_GET + AROLLNO)
 #define VALID_API_TA_GET_ALL (VALID_URL_TA_GET)

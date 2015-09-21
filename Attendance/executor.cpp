@@ -4,6 +4,7 @@
 #include <sstream>
 #include <map>
 #include <utility>
+#include <cstdlib>
 
 
 typedef std::map<std::string,std::vector<std::pair<std::string,std::string> > > attendance_map;
@@ -242,7 +243,7 @@ bool Executor::ta_mac_del(const args_container &args, outputType type, string & 
 
 bool Executor::ta_put_mac(const args_container &args, outputType type, string & response,const string & url){
   std::string stmt = "SELECT * FROM put_mac('"+args.rollno+"','"+args.mac+"');";
-  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+","+args.mac+"','TA Delete');";
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+","+args.mac+"','MAC Add');";
   pqxx::result res,res2;
   ptree root;
   if(generic_query_helper(stmt,res)){
@@ -337,6 +338,23 @@ bool Executor::attendance_put_time(const args_container &args, outputType type, 
     root.put("status","Error in adding");
     root.put("status code","1");
   }
+  std::ostringstream oss;
+  write_json(oss,root);
+  response = oss.str();
+  return true;
+}
+
+bool Executor::attendance_update(const args_container &args, outputType type, string & response,const string & url){
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.from+","+args.to+","+args.format+
+  "','Attendance Updated Attempted');";
+  pqxx::result res,res2;
+  ptree root;
+  std::string command = "./update_attendance.out " + args.from + " " + args.to;
+  std::cout <<"Running command:"<<command<<std::endl;
+  int rvalue = system(command.c_str());
+  generic_query_helper(stmt2,res2);
+  root.put("status","Attendance Update Attempted(no garuntees)");
+  root.put("status code","0");
   std::ostringstream oss;
   write_json(oss,root);
   response = oss.str();
