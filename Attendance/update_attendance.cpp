@@ -116,6 +116,8 @@ int main(int argc, char * argv[]){
         to_time = phd_to_time;
         buildings.clear();
         buildings.push_back("academic");
+        buildings.push_back("library");
+        buildings.push_back("student+centre");
       }
       else{
         from_time = mtech_from_time;
