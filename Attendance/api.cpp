@@ -115,6 +115,9 @@ unsigned long url_type(const std::string & url){
   else if(url == "/attendance/put"){
     return VALID_URL_ATTENDANCE_PUT;
   }
+  else if(url == "/attendance/update"){
+    return VALID_URL_ATTENDANCE_UPDATE;
+  }
   else if(url == "/ta/get"){
     return VALID_URL_TA_GET;
   }
@@ -225,6 +228,9 @@ bool api::_executeAPI(const string& url, const struct args_container & argvals,
   }
   else if(_executor.get_type() == VALID_API_LOG_GET){
     ret = _executor.log_get(argvals,type,response,url);
+  }
+  else if(_executor.get_type() == VALID_API_ATTENDANCE_UPDATE){
+    ret = _executor.attendance_update(argvals,type,response,url);
   }
   else {
     response = "Inavlid API";

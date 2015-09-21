@@ -1,6 +1,6 @@
-#ifndef __API_FOR_REST_OR_WHATEVER__
-#define __API_FOR_REST_OR_WHATEVER__
-
+#ifndef __API_FOR_REST__
+#define __API_FOR_REST__
+// COmment
 #include <map>
 #include <string>
 #include <set>
@@ -31,6 +31,5 @@ private:
 };
 
 
-} // namespace ourapi ends
-
+} 
 #endif
