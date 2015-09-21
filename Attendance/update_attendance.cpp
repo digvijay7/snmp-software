@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <stdexcept>
 
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
@@ -21,6 +22,14 @@
 //#include <boost/asio.hpp>
 // To compile:  g++ update_attendance.cpp -lcurlpp -lcurl -lpqxx -lpq -lboost_system -lboost_date_time 2>&1 -o update_attendance.out | more 
 
+time_t get_time_t(std::string date_string){
+  struct tm tm;
+  if(!strptime(date_string.c_str(), "%Y-%m-%d",&tm)){
+    throw std::invalid_argument("Wrong date format!");
+  }
+  return mktime(&tm);
+}
+
 bool make_http_request(
   std::string addr,
   std::string from_date,
@@ -29,9 +38,23 @@ bool make_http_request(
   std::string to_time,
   std::string mac,
   std::string building,
+  std::string mac_register_date,
   std::string token,
   std::string & result)
   {
+
+  time_t mac_register_date_t = get_time_t(mac_register_date);
+  time_t from_date_t = get_time_t(from_date);
+  time_t to_date_t = get_time_t(to_date);
+
+  if(from_date_t < mac_register_date_t){
+    from_date = mac_register_date;
+  }
+  std::cout<<"Checking from_date > to_date"<<std::endl;
+  if(from_date_t > to_date_t){
+    throw std::invalid_argument("To_date falls before than before date!");
+  }
+  std::cout<<"Passed!"<<std::endl;
   std::string url = addr + "/presence?mac=" + mac + "&from=" + from_date +
   "-" + from_time + "&to=" + to_date + "-" + to_time + "&format=yyyy-mm-dd-hh24:mi:ss" +
   "&location=" + building + "&token=" + token;
@@ -71,6 +94,11 @@ bool strip_dates(std::string json_string,std::vector<std::string> & output){
 
 bool get_date_range(std::string from, std::string to,std::vector<std::string> & dates){
   using namespace boost::gregorian;
+  time_t from_t = get_time_t(from);
+  time_t to_t = get_time_t(to);
+  if( from_t > to_t){
+    throw std::invalid_argument("To_date falls before than before date!");
+  }
   date start(from_simple_string(from)),end(from_simple_string(to));
   date_duration dd(1);
   date_period range (start,end+dd);
@@ -106,7 +134,7 @@ int main(int argc, char * argv[]){
   try{
     pqxx::connection c(conn_string);
     pqxx::work w(c);
-    pqxx::result res = w.exec("SELECT m.rollno,mac,batch FROM ta_macs m join ta_info i on i.rollno = m.rollno;");
+    pqxx::result res = w.exec("SELECT m.rollno,mac,batch,m.register_date FROM ta_macs m join ta_info i on i.rollno = m.rollno;");
     w.commit();
     std::string output,from_time,to_time;
     std::vector<std::string> buildings;
@@ -129,7 +157,7 @@ int main(int argc, char * argv[]){
       }
       for(int k=0;k<buildings.size();k++){
         make_http_request(url,from_date,to_date,from_time,to_time,
-        res[i][1].as<std::string>(),buildings[k],
+        res[i][1].as<std::string>(),buildings[k],res[i][3].as<std::string>(),
         token,output);
         std::vector<std::string> present_dates;
         if(strip_dates(output,present_dates)){

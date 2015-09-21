@@ -308,9 +308,28 @@ int main(int argc, char* argv[])
 			std::string buf(inf.getData());
 			put_log(out,"Sending to server.");
 			put_log(out,inf.getData());
-			boost::asio::write(socket,boost::asio::buffer(buf),boost::asio::transfer_all(),error);
+      // TBD: If write fails, handle exception
+      // Note: "write" blocks untils it sends all the data
+      // Is an error always thrown incase a connection is lost?
+      do{
+        boost::asio::write(socket,boost::asio::buffer(buf),boost::asio::transfer_all(),error);
+        if(error){ // write error
+          //keep attempting to reconnect
+          socket.reset(new boost::asio::ip::tcp::socket(io_service));
+       		endpoint_iterator = resolver.resolve(query);
+      		while (error && endpoint_iterator != end)
+      		{
+      			socket.close();
+      			socket.connect(*endpoint_iterator++, error);
+      		}
+          sleep(1); // sleep for a while when cannot connect
+        }
+      }while(error); // this error is socket error 
 			boost::array<char, 2048> stemp;
 			size_t len = socket.read_some(boost::asio::buffer(stemp),error);
+      if(error){ // most likely because server down
+        // So ignore
+      }
     }
   }
   catch (std::exception& e){
