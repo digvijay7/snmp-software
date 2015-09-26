@@ -47,10 +47,10 @@ bool make_http_request(
   time_t from_date_t = get_time_t(from_date);
   time_t to_date_t = get_time_t(to_date);
 
-  if(from_date_t < mac_register_date_t){
+  if(strcmp(from_date.c_str(), mac_register_date.c_str()) < 0){
     from_date = mac_register_date;
   }
-  if(from_date_t > to_date_t){
+  if(strcmp(from_date.c_str(), to_date.c_str()) > 0){
     throw std::invalid_argument("To_date falls before than before date!");
   }
   std::string url = addr + "/presence?mac=" + mac + "&from=" + from_date +
@@ -92,6 +92,9 @@ bool strip_dates(std::string json_string,std::vector<std::string> & output){
 
 bool get_date_range(std::string from, std::string to,std::vector<std::string> & dates){
   using namespace boost::gregorian;
+  if (strcmp(from.c_str(),to.c_str()) > 0){
+    throw std::invalid_argument("From date > to date!");
+  }
   date start(from_simple_string(from)),end(from_simple_string(to));
   date_duration dd(1);
   date_period range (start,end+dd);
