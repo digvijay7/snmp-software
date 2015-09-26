@@ -51,6 +51,8 @@ bool make_http_request(
     from_date = mac_register_date;
   }
   if(strcmp(from_date.c_str(), to_date.c_str()) > 0){
+    std::cerr<<"MAC:"<<mac<<" ";
+    std::cerr<<"From date:"<<from_date<<" to date:"<<to_date<<std::endl;
     throw std::invalid_argument("To_date falls before than before date!");
   }
   std::string url = addr + "/presence?mac=" + mac + "&from=" + from_date +
