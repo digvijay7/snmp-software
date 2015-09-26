@@ -154,9 +154,17 @@ int main(int argc, char * argv[]){
         buildings.push_back("student+centre,2");
       }
       for(int k=0;k<buildings.size();k++){
-        make_http_request(url,from_date,to_date,from_time,to_time,
-        res[i][1].as<std::string>(),buildings[k],res[i][3].as<std::string>(),
-        token,output);
+        try{
+          make_http_request(url,from_date,to_date,from_time,to_time,
+          res[i][1].as<std::string>(),buildings[k],res[i][3].as<std::string>(),
+          token,output);
+        }
+        catch( const std::invalid_argument &e){
+          std::cerr<<"To date falls before mac_register_date. Rollno:";
+          std::cerr<<res[i][0].as<std::string>() << " Mac:"<<res[i][1].as<std::string>()<<std::endl;
+          std::cerr<<"Continuing..."<<std::endl;
+          continue;
+        }
         std::vector<std::string> present_dates;
         if(strip_dates(output,present_dates)){
           for(int j=0;j<dates.size();j++){
