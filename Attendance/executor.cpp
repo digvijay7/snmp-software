@@ -242,8 +242,10 @@ bool Executor::ta_mac_del(const args_container &args, outputType type, string & 
 }
 
 bool Executor::ta_put_mac(const args_container &args, outputType type, string & response,const string & url){
-  std::string stmt = "SELECT * FROM put_mac('"+args.rollno+"','"+args.mac+"');";
-  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+","+args.mac+"','MAC Add');";
+  std::string stmt = "SELECT * FROM put_mac('"+args.rollno+"','"+args.mac+"','"+
+  args.from+"','"+args.format+"');";
+  std::string stmt2 = "SELECT * FROM put_log('"+args.username+"','"+args.rollno+","+args.mac+
+  ","+args.from+","+args.format+"','MAC Add');";
   pqxx::result res,res2;
   ptree root;
   if(generic_query_helper(stmt,res)){
