@@ -3,7 +3,7 @@ CFLAGS=-c -Wall
 LDFLAGS=-lboost_system -lboost_thread -lpthread -lpq -lpqxx
 SOURCES=serv.cpp Parse.cpp Log.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-DEPENDENCIES=../lib/sha.cpp
+DEPENDENCIES=../lib/sha.cpp ../lib/util.cpp
 EXECUTABLE=server
 INCLUDES=-I../lib/
 all: $(SOURCES) $(EXECUTABLE)

@@ -7,6 +7,7 @@
 #include <pqxx/pqxx>
 #include <cstring>
 #include <sha.h>
+#include "util.hpp"
 
 Log makeLog(std::vector<std::string>);
 std::string makeDate(std::string);
@@ -119,7 +120,15 @@ Log makeLog(std::vector<std::string> list){
 	if(!isMac(list.at(2))) device = "null";
 	else device = list.at(2);
 	if(!isMac(list.at(3))) user = "null";
-	else user = list.at(3);
+	else {
+    if(list.at(3).size() == 17){
+      user = snmp::util::mac_formatter(list.at(3));
+    }
+    else{
+      user = list.at(3);
+    }
+  }
+  
 	//Put in function later - extract quoted text
 	std::string temp;
 	temp = list.at(4);
