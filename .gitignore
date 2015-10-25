@@ -1,1 +1,6 @@
 config
+*.o
+*.swp
+*.out
+rest-server
+server
